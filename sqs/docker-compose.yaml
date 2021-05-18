@@ -13,6 +13,8 @@ services:
   db:
     image: postgres
     restart: always
+    volumes: 
+      - sqs-data:/var/lib/postgresql/data
     ports: 
         - "5432:5432"
     environment:
@@ -21,4 +23,6 @@ services:
       POSTGRES_DB: sqs
 
 
+volumes: 
+  sqs-data:
 

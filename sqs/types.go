@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type Time = int
+type Time = string
 
 const (
 	Second = iota
@@ -15,19 +15,35 @@ const (
 	BaseUrl = "http://localhost:3000"
 )
 
+var times = [3]string{"second", "minute", "hour"}
+
 type User struct {
 	gorm.Model
-	AccountId string
+	AccountId string `gorm:"primaryKey"`
 	Queues    []Queue
 }
 
 type Queue struct {
 	gorm.Model
-	Name     string
-	Url      string `gorm:"unique"`
-	UserID   uint
-	Conf     ConfigurationQueue `gorm:"embedded"`
-	messages []Message
+	Name             string
+	Url              string `gorm:"unique"`
+	UserID           uint
+	AccountId        string             `gorm:"primaryKey"`
+	Configuration    ConfigurationQueue `gorm:"embedded"`
+	messages         []Message
+	httpDestinations []HTTPDestination
+}
+
+type Destination interface {
+	sendMessage(m *Message) error
+	healthCheck() bool
+}
+
+type HTTPDestination struct {
+	gorm.Model
+	QueueID   uint
+	Url       string
+	HealthUrl string
 }
 
 type Message struct {
@@ -46,9 +62,13 @@ type ConfigurationQueue struct {
 }
 
 type CreateQueueBody struct {
-	Conf      ConfigurationQueue
-	AccountId string
-	Name      string
+	Configuration ConfigurationQueue
+	Name          string
+}
+
+type AddDestinationBody struct {
+	Url         string
+	LongPolling int
 }
 
 func (u *User) JSON() string {

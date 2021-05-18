@@ -7,14 +7,17 @@ import (
 
 func login(c *fiber.Ctx) error {
 
+	user := User{}
+
+	db.First(&user)
+
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	claims := token.Claims.(jwt.MapClaims)
-	claims["accountId"] = "23425235"
-	claims["userId"] = "123123"
+	claims["accountId"] = user.AccountId
+	claims["userId"] = user.ID
 
-	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte("secret"))
+	t, err := token.SignedString([]byte(Secret))
 	if err != nil {
 		return c.SendStatus(fiber.StatusInternalServerError)
 	}

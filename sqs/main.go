@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
@@ -58,19 +59,17 @@ func startDb() {
 func main() {
 	fastergoding.Run()
 	app := fiber.New()
-	db := connectDatabase()
+
+	connectDatabase()
 
 	db.AutoMigrate(&Queue{})
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&Message{})
+	db.AutoMigrate(&HTTPDestination{})
 
 	app.Use(recover.New())
 
-	app.Post("/login", login)
-
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Hello, World 👋!")
-	})
+	app.Post("/login", login) // just for testing porpuses
 
 	app.Post("/user", func(c *fiber.Ctx) error {
 		AccountId := c.Query("accountId")
@@ -89,63 +88,110 @@ func main() {
 
 	})
 
+	fmt.Println(Secret)
+
 	app.Use(jwtware.New(jwtware.Config{
-		SigningKey: []byte("secret"),
+		SigningKey: []byte(Secret),
 	}))
 
-	app.Post("/queue/:accountId/:queueName", func(c *fiber.Ctx) error {
+	app.Patch("/purge/:id", func(c *fiber.Ctx) error {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
-		// accountId := claims["accountId"].(string)
-		userId := claims["userId"].(string)
+		accountId := claims["accountId"]
 
-		queue := Queue{}
-
-		if res := db.First(&queue, "user_id = ?", userId); res.Error != nil {
-			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Cannot find the queue."})
-		}
-
-		message := Message{}
-
-		if err := json.Unmarshal(c.Body(), &message); err != nil {
-			return c.JSON(ErrorResponse{Status: 400, Message: "Invalid JSON format."})
-		}
-
-		db.Create(&message)
-
-		return c.JSON(message)
+		fmt.Println(accountId)
+		return c.JSON(claims)
 	})
 
-	app.Post("/queue", func(c *fiber.Ctx) error {
+	app.Post("/create-destination", func(c *fiber.Ctx) error {
 
-		queue := Queue{}
+		return c.SendString("")
+	})
 
-		err := json.Unmarshal(c.Body(), &queue)
+	app.Post("/create", func(c *fiber.Ctx) error {
+
+		body := CreateQueueBody{}
+
+		err := json.Unmarshal(c.Body(), &body)
 
 		if err != nil {
 			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Invalid payload."})
 		}
 
+		us := c.Locals("user").(*jwt.Token)
+		claims := us.Claims.(jwt.MapClaims)
+
+		accountId := claims["accountId"]
+
 		user := User{}
 
-		res := db.First(&user, queue.UserID)
-
-		if res.Error != nil {
-			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Unable to find a user"})
+		if res := db.First(&user, "account_id = ?", accountId); res.Error != nil {
+			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Cannot the user."})
 		}
 
-		queue.Url = BaseUrl + "/" + user.AccountId + "/" + queue.Name
+		fmt.Println(body.Configuration)
 
-		fmt.Println(user.JSON())
+		if body.Configuration.DeliveryDelayTime == "" || body.Configuration.MessageRetentionTime == "" || body.Configuration.VisibilityTime == "" {
+			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Invalid configuration please check."})
+		}
 
-		res = db.Create(&queue)
+		name := strings.ReplaceAll(body.Name, " ", "")
+
+		queue := Queue{
+			Url:           BaseUrl + "/" + user.AccountId + "/" + name,
+			Configuration: body.Configuration,
+			AccountId:     user.AccountId,
+			Name:          name,
+		}
+
+		res := db.Create(&queue)
 
 		if res.Error != nil {
 			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Couldn't create record."})
 		}
 
-		return c.SendString(string(c.Body()))
+		return c.JSON(queue)
+	})
+
+	// Retreive manually a message from the queue
+	app.Get("/:accountId/:queueName", func(c *fiber.Ctx) error {
+		return c.SendString("Get a message from a queue")
+	})
+
+	// Send a message to the queue
+	app.Post("/:accountId/:queueName", func(c *fiber.Ctx) error {
+
+		user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+
+		// accountId := claims["accountId"].(string)
+		accountId := claims["accountId"].(string)
+		qAccountId := c.Params("accountId")
+
+		if accountId != qAccountId {
+			return c.Status(401).JSON(ErrorResponse{Status: 400, Message: "Not Authorized"})
+		}
+
+		name := c.Params("queueName")
+
+		queue := Queue{}
+
+		if res := db.First(&queue, "account_id = ? AND name = ?", qAccountId, name); res.Error != nil {
+			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Cannot find the queue."})
+		}
+
+		// message := Message{}
+
+		// if err := json.Unmarshal(c.Body(), &message); err != nil {
+		// 	return c.JSON(ErrorResponse{Status: 400, Message: "Invalid JSON format."})
+		// }
+
+		// // send to destinations
+
+		// db.Create(&message)
+
+		return c.JSON(queue)
 	})
 
 	app.Listen(":3000")
