@@ -31,24 +31,12 @@ type Queue struct {
 	AccountId        string             `gorm:"primaryKey"`
 	Configuration    ConfigurationQueue `gorm:"embedded"`
 	messages         []Message
-	httpDestinations []HTTPDestination
 }
 
-type Destination interface {
-	sendMessage(m *Message) error
-	healthCheck() bool
-}
-
-type HTTPDestination struct {
-	gorm.Model
-	QueueID   uint
-	Url       string
-	HealthUrl string
-}
 
 type Message struct {
 	gorm.Model
-	message string
+	Message string
 	QueueID uint
 }
 
@@ -74,4 +62,10 @@ type AddDestinationBody struct {
 func (u *User) JSON() string {
 	data, _ := json.Marshal(u)
 	return string(data)
+}
+
+
+type RetriveMessageBody struct { 
+	LongPulling int
+	BatchLimit int
 }

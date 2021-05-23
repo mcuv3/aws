@@ -9,12 +9,14 @@ services:
         SECRET: supersecret
     volumes: 
         - .:/app
+    depends_on: 
+      - db
 
   db:
     image: postgres
     restart: always
     volumes: 
-      - sqs-data:/var/lib/postgresql/data
+      - sqs-data:/var/lib/postgresql/data 
     ports: 
         - "5432:5432"
     environment:

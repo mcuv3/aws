@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
@@ -65,7 +66,6 @@ func main() {
 	db.AutoMigrate(&Queue{})
 	db.AutoMigrate(&User{})
 	db.AutoMigrate(&Message{})
-	db.AutoMigrate(&HTTPDestination{})
 
 	app.Use(recover.New())
 
@@ -104,10 +104,7 @@ func main() {
 		return c.JSON(claims)
 	})
 
-	app.Post("/create-destination", func(c *fiber.Ctx) error {
 
-		return c.SendString("")
-	})
 
 	app.Post("/create", func(c *fiber.Ctx) error {
 
@@ -148,7 +145,7 @@ func main() {
 		res := db.Create(&queue)
 
 		if res.Error != nil {
-			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Couldn't create record."})
+			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Couldn't create queue."})
 		}
 
 		return c.JSON(queue)
@@ -156,7 +153,42 @@ func main() {
 
 	// Retreive manually a message from the queue
 	app.Get("/:accountId/:queueName", func(c *fiber.Ctx) error {
-		return c.SendString("Get a message from a queue")
+		body := RetriveMessageBody{}
+
+		err := json.Unmarshal(c.Body(),&body)
+
+		if err!=nil { 
+			return c.Status(400).JSON(ErrorResponse{Status: 400,Message:"Invalid payload"})
+		}
+
+		msgs := make(chan []Message)	
+
+		
+		go func(){
+			
+			messages := make([]Message,0)	
+			var n int
+			
+			for  {
+				m := Message{}
+				 db.First(&m,"")
+				 messages = append(messages, m)
+				time.Sleep(1)
+				n++
+
+				if body.BatchLimit == len(messages) || body.LongPulling == n { 
+					break
+				} 
+
+			}
+				msgs <- messages
+
+		}()
+
+
+		return c.JSON(<- msgs)
+
+
 	})
 
 	// Send a message to the queue
@@ -165,7 +197,6 @@ func main() {
 		user := c.Locals("user").(*jwt.Token)
 		claims := user.Claims.(jwt.MapClaims)
 
-		// accountId := claims["accountId"].(string)
 		accountId := claims["accountId"].(string)
 		qAccountId := c.Params("accountId")
 
@@ -181,17 +212,24 @@ func main() {
 			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Cannot find the queue."})
 		}
 
-		// message := Message{}
 
-		// if err := json.Unmarshal(c.Body(), &message); err != nil {
-		// 	return c.JSON(ErrorResponse{Status: 400, Message: "Invalid JSON format."})
-		// }
 
-		// // send to destinations
+		msg := Message{
+			Message: "Testing",
+			QueueID:queue.ID,
+		}
 
-		// db.Create(&message)
+		res := db.Create(&msg)
 
-		return c.JSON(queue)
+		if res.Error !=nil{
+			return c.Status(400).JSON(ErrorResponse{Message: "Could not save the message",Status: 400})
+		}
+
+
+
+		fmt.Println(queue)
+
+		return c.JSON(msg)
 	})
 
 	app.Listen(":3000")
