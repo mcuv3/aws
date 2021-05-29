@@ -153,13 +153,26 @@ func main() {
 
 	// Retreive manually a message from the queue
 	app.Get("/:accountId/:queueName", func(c *fiber.Ctx) error {
+		queue := Queue{}
+		err := validateQueueOwner(c,&queue)
+		
+		if err !=nil { 
+			return c.JSON(err)
+		}
+		
 		body := RetriveMessageBody{}
-
-		err := json.Unmarshal(c.Body(),&body)
-
+		err = json.Unmarshal(c.Body(),&body)
+		
+ 
 		if err!=nil { 
 			return c.Status(400).JSON(ErrorResponse{Status: 400,Message:"Invalid payload"})
 		}
+
+		// m:= make([]Message,0)
+		// db.Find(&m,)
+
+		// return c.JSON(m)
+
 
 		msgs := make(chan []Message)	
 
@@ -173,7 +186,7 @@ func main() {
 				m := Message{}
 				 db.First(&m,"")
 				 messages = append(messages, m)
-				time.Sleep(1)
+				time.Sleep(time.Second)
 				n++
 
 				if body.BatchLimit == len(messages) || body.LongPulling == n { 
@@ -193,26 +206,12 @@ func main() {
 
 	// Send a message to the queue
 	app.Post("/:accountId/:queueName", func(c *fiber.Ctx) error {
-
-		user := c.Locals("user").(*jwt.Token)
-		claims := user.Claims.(jwt.MapClaims)
-
-		accountId := claims["accountId"].(string)
-		qAccountId := c.Params("accountId")
-
-		if accountId != qAccountId {
-			return c.Status(401).JSON(ErrorResponse{Status: 400, Message: "Not Authorized"})
-		}
-
-		name := c.Params("queueName")
-
 		queue := Queue{}
+		err := validateQueueOwner(c,&queue)
 
-		if res := db.First(&queue, "account_id = ? AND name = ?", qAccountId, name); res.Error != nil {
-			return c.Status(400).JSON(ErrorResponse{Status: 400, Message: "Cannot find the queue."})
+		if err !=nil { 
+			return c.JSON(err)
 		}
-
-
 
 		msg := Message{
 			Message: "Testing",
@@ -227,11 +226,35 @@ func main() {
 
 
 
-		fmt.Println(queue)
 
 		return c.JSON(msg)
 	})
 
 	app.Listen(":3000")
+
+}
+
+
+
+func validateQueueOwner(c *fiber.Ctx,queue *Queue) error { 
+
+	    user := c.Locals("user").(*jwt.Token)
+		claims := user.Claims.(jwt.MapClaims)
+
+		accountId := claims["accountId"].(string)
+		qAccountId := c.Params("accountId")
+
+		if accountId != qAccountId {
+			return fiber.NewError(401,"Not Authorized")
+		}
+
+		name := c.Params("queueName")
+
+
+		if res := db.First(&queue, "account_id = ? AND name = ?", qAccountId, name); res.Error != nil {
+			return fiber.NewError(404,"Cannot find the queue")
+		}
+
+		return nil
 
 }
