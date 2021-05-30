@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"gorm.io/gorm"
 )
@@ -68,4 +69,15 @@ func (u *User) JSON() string {
 type RetriveMessageBody struct { 
 	LongPulling int
 	BatchLimit int
+}
+
+
+
+func (m *Message) Key() string { 
+	return fmt.Sprintf("%d.%d",m.QueueID,m.ID) 
+}
+
+
+func (m *Queue) Pattern()string{ 
+	return fmt.Sprintf("%d.*",m.ID)
 }

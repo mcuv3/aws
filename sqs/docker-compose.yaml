@@ -11,6 +11,11 @@ services:
         - .:/app
     depends_on: 
       - db
+  
+  cache:
+    image: redis
+    ports: 
+      - "6666:6379"
 
   db:
     image: postgres

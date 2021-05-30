@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/go-redis/redis/v8"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -23,4 +24,15 @@ func connectDatabase() {
 
 	fmt.Println("Successfully connected with the database")
 
+}
+
+
+func connectCache()  *redis.Client{ 
+	rdb := redis.NewClient(&redis.Options{
+        Addr:     "cache:6379",
+        Password: "", // no password set
+        DB:       0,  // use default DB
+    })
+
+	return rdb
 }
