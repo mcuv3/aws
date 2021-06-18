@@ -144,29 +144,24 @@ func main() {
 			return c.Status(400).JSON(ErrorResponse{Status: 400,Message:"Invalid payload"})
 		}
 
-		// m:= make([]Message,0)
-		// db.Find(&m,)
-
-		// return c.JSON(m)
-
 
 		msgs := make(chan []Message)	
-
 		
+		fmt.Println(body)
 		go func(){
 			
-			messages := make([]Message,0)	
+			messages := make([]Message,0)	 
 			var n int
 			
 			for  {
 				m := Message{}
-				//  db.First(&m,"")
 
 				keys,err:=  redis.Keys(ctx,queue.Pattern()).Result()
-				fmt.Println(keys)
+
 				if err == nil {
 					for _,k:= range keys {
 						val,_ :=  redis.Get(ctx,k).Result()
+						redis.Del(ctx,k)
 						json.Unmarshal([]byte(val),&m)
 
 						messages = append(messages, m)
@@ -174,16 +169,16 @@ func main() {
 				}
 
 				
+				
 				time.Sleep(time.Second)
 				n++
-
-				if body.BatchLimit == len(messages) || body.LongPulling == n { 
+					
+				if body.BatchLimit == len(messages) || body.LongPooling <= n { 
 					break
-				} 
-
+				}
+				
 			}
 
-			redis.Subscribe(ctx,c.Params("accountId"),)
 				msgs <- messages
 
 		}()
@@ -203,28 +198,96 @@ func main() {
 			return c.JSON(err)
 		}
 
+		message := SendMessageBody{}
+
+		err = json.Unmarshal(c.Body(),&message)
+
+		if err!=nil {
+			return c.Status(400).JSON(ErrorResponse{Message: "Invalid payload."})
+		}
+
 		msg := Message{
-			Message: "Testing",
+			Message: message.Message,
 			QueueID:queue.ID,
 		}
 
+		// redis.Publish(ctx, "__keyspace@0__ DEL", "hello").Err()
+
 		
 		res := db.Create(&msg)
-		m,_:=json.Marshal( msg)
-		fmt.Println(msg.Key())
-		err = redis.Set(ctx,msg.Key(),m,0).Err()
+		m,_:= json.Marshal( msg)
 
-		fmt.Println(err)
+		err = redis.Set(ctx,msg.Key(),m,0).Err()
 
 		if res.Error !=nil || err !=nil {
 			return c.Status(400).JSON(ErrorResponse{Message: "Could not save the message",Status: 400})
 		}
 
 
-
-
 		return c.JSON(msg)
 	})
+
+	app.Delete("/:accountId/:queueName",func(c *fiber.Ctx)error{
+		
+		queue:= Queue{}
+
+		err:= validateQueueOwner(c,&queue)
+
+		if err!=nil { 
+			return c.Status(401).JSON(ErrorResponse{Message: "Not Authorized"})
+		}
+
+		body := DeleteMessageBody{}
+
+		err = json.Unmarshal(c.Body(),&body)
+
+		if err !=nil { 
+			return c.Status(400).JSON(ErrorResponse{Message:"Invalid payload sorry 😥"})
+		}
+		var messages []Message
+
+		
+		var toDelete []int
+		
+		for _,m := range messages { 
+			v,_ :=redis.Get(ctx,fmt.Sprintf("%d.%d",queue.ID,m.ID)).Result()
+			if v == "" {
+				toDelete = append(toDelete, int(m.ID))
+			}
+		}
+
+		db.Delete(&messages,toDelete)
+		
+		return c.JSON(SuccessResponse{Message: "Successfully deleted"})
+	})
+
+	pubsub := redis.Subscribe(ctx, "__keyspace@0__:*")
+
+// Wait for confirmation that subscription is created before publishing anything.
+	_, err := pubsub.Receive(ctx)
+	if err != nil {
+		panic(err)
+	}
+	redis.Set(ctx,"TEST","!",0).Err()
+
+	// Go channel which receives messages.
+	ch := pubsub.Channel()
+
+
+	// time.AfterFunc(time.Second, func() {
+	// fmt.Println("CHANNEL CLOSED")
+	// // _ = pubsub.Close()
+	// })
+
+
+ 
+	go func(){
+		for msg := range ch {
+			fmt.Println("NEW MESSAGE")
+			fmt.Println(msg.Channel, msg.Payload)
+		}
+	}()
+
 
 	app.Listen(":3000")
 

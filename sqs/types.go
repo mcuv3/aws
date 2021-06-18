@@ -18,6 +18,8 @@ const (
 
 var times = [3]string{"second", "minute", "hour"}
 
+type UserMessageId string;
+
 type User struct {
 	gorm.Model
 	AccountId string `gorm:"primaryKey"`
@@ -38,6 +40,7 @@ type Queue struct {
 type Message struct {
 	gorm.Model
 	Message string
+	UserMessageId UserMessageId
 	QueueID uint
 }
 
@@ -55,9 +58,14 @@ type CreateQueueBody struct {
 	Name          string
 }
 
-type AddDestinationBody struct {
-	Url         string
-	LongPolling int
+
+type SendMessageBody struct { 
+	Id UserMessageId
+	Message string
+}
+
+type DeleteMessageBody struct { 
+	Ids []UserMessageId
 }
 
 func (u *User) JSON() string {
@@ -67,7 +75,7 @@ func (u *User) JSON() string {
 
 
 type RetriveMessageBody struct { 
-	LongPulling int
+	LongPooling int
 	BatchLimit int
 }
 
