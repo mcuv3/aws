@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+
+package responses;
+
+option go_package = ".;proto";
+
+message BaseResponse { 
+    string message  = 1;
+    string status = 2;
+}

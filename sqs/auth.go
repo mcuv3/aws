@@ -3,11 +3,13 @@ package main
 import (
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
+
+	"github.com/MauricioAntonioMartinez/aws/model"
 )
 
 func login(c *fiber.Ctx) error {
 
-	user := User{}
+	user := model.User{}
 
 	db.First(&user)
 

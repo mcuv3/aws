@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+
+
+package sqs;
+
+import "iam.proto";
+import "responses.proto";
+
+option go_package = ".;proto";
+
+
+message Message {
+    string Id = 1;
+    string message = 2;
+}
+
+message Queue { 
+    string Id = 1;
+    string name = 2;
+    string account_id = 3;
+}
+
+
+message CreateQueueRequest { 
+    Queue queue = 1;
+    iam.Credentials credentials = 2;
+}
+
+message CreateQueueResponse { 
+    Queue queue = 1;
+}
+
+message SendMessageRequest {
+    Message message = 1;
+    iam.Credentials credentials = 2;
+}
+
+message SendMessageResponse {
+    responses.BaseResponse response = 1;
+}   
+
+message ReceiveMessageRequest {
+    Queue queue = 1;
+    iam.Credentials credentials = 2;
+}
+
+message ReceiveMessageResponse {
+    Message message = 1;
+}
+
+service SQSService {
+    rpc CreateQueue(CreateQueueRequest) returns (CreateQueueResponse){};
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse){};
+    rpc ReceiveMessage(ReceiveMessageRequest) returns (stream ReceiveMessageResponse){};
+}
