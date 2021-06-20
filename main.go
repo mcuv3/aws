@@ -1,37 +1,51 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"os"
-	"sync"
 
 	"github.com/MauricioAntonioMartinez/aws/iam"
 	"github.com/MauricioAntonioMartinez/aws/sqs"
-	"github.com/qinains/fastergoding"
+
+	// "github.com/qinains/fastergoding"
 	"github.com/rs/zerolog"
 )
 
+
+var (
+	service =  flag.String("svc","","The aws service to start")
+
+)
+
 func main() {
-	fastergoding.Run()
+	flag.Parse()
+ 
+	fmt.Println(*service)
+	// fastergoding.Run()
+
+
+	
+	svc := *service
+
+	if svc == "" {
+		svc = os.Getenv("SERVICE")
+	} 
+
+	
 	l := logger()
 	
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func(){
-		defer wg.Done()
+		
+	switch(svc) {  
+	case "sqs":
 		if err := sqs.Run(l); err !=nil {
 			l.Fatal().Msg("Unable to start sqs service.")
 		}
-	}()
-
-	go func (){
-		defer wg.Done()
+	case "iam":
 		if err := iam.Run(l); err !=nil {
 			l.Fatal().Msg("Unable to start iam service.")
 		}
-
-	}()
-	wg.Wait()
+	}
 }
 
 func logger() zerolog.Logger { 

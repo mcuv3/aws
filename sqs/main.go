@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"time"
 
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/iam"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -40,7 +42,6 @@ func (*SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) 
 
 	fmt.Println(queue)
 
-	fmt.Println("This is the actual handler.")
 
 	// if res := db.First(&user, "account_id = ?", accountId); res.Error != nil {
 	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Cannot the user."})
@@ -67,7 +68,7 @@ func (*SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) 
 	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Couldn't create queue."})
 	// }
 
-	return nil,nil
+	return &aws.CreateQueueResponse{Queue: queue},nil
 }
 
 func (*SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest)(*aws.SendMessageResponse,error){ 
@@ -81,6 +82,12 @@ func (*SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQSSe
 }
 
 
+
+
+func authConfig() *iam.AuthInterceptor {
+	 m := iam.NewJWTMannager("mysecret",time.Hour)
+	 return iam.NewAuthInterceptor(m,"iam")
+}
 
 func Run(l zerolog.Logger) error {
 
@@ -109,7 +116,9 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(withJwt))
+	iamInterceptor := authConfig()
+
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(iamInterceptor.Unary()))
 
 	aws.RegisterSQSServiceServer(s,&SQSServer{})
 	

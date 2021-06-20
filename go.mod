@@ -10,6 +10,7 @@ require (
 	github.com/gofiber/jwt/v2 v2.2.1
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0 // indirect
 	github.com/jackc/pgproto3/v2 v2.0.7 // indirect
 	github.com/klauspost/compress v1.12.2 // indirect
 	github.com/lib/pq v1.6.0 // indirect

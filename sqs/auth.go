@@ -1,14 +1,9 @@
 package sqs
 
 import (
-	"context"
-	"fmt"
-	"log"
-
 	"github.com/MauricioAntonioMartinez/aws/model"
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
-	"google.golang.org/grpc"
 )
 
 func login(c *fiber.Ctx) error {
@@ -41,14 +36,3 @@ func checkCredentials(token *jwt.Token) string {
 	return accountId
 }
 
-
-func withJwt(
-    ctx context.Context,
-    req interface{},
-    info *grpc.UnaryServerInfo,
-    handler grpc.UnaryHandler,
-) (interface{}, error) {
-	fmt.Println(ctx)
-    log.Println("--> unary interceptor: ", info.FullMethod)
-    return handler(ctx, req)
-}

@@ -9,14 +9,19 @@ services:
       ./env/sqs.env
     volumes: 
         - .:/app
+    environment: 
+      SERVICE: sqs
     depends_on: 
       - db
   iam:
     build: .
     ports: 
-        - "6001:50051"
+        - "6002:50051"
     volumes: 
         - .:/app
+    environment: 
+      SERVICE: iam
+    
   
   cache:
     image: redis
