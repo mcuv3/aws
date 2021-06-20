@@ -1,19 +1,18 @@
 syntax = "proto3";
-
-
-
 package sqs;
 
-import "iam.proto";
-import "responses.proto";
 
-option go_package = ".;proto";
+option go_package = "./;aws";
+
+import "iam.proto";
+
 
 
 message Message {
     string Id = 1;
     string message = 2;
 }
+// import "google/api/annotations.proto";
 
 message Queue { 
     string Id = 1;
@@ -37,7 +36,7 @@ message SendMessageRequest {
 }
 
 message SendMessageResponse {
-    responses.BaseResponse response = 1;
+    string message = 1;
 }   
 
 message ReceiveMessageRequest {
@@ -50,7 +49,21 @@ message ReceiveMessageResponse {
 }
 
 service SQSService {
-    rpc CreateQueue(CreateQueueRequest) returns (CreateQueueResponse){};
-    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse){};
-    rpc ReceiveMessage(ReceiveMessageRequest) returns (stream ReceiveMessageResponse){};
+    rpc CreateQueue(CreateQueueRequest) returns (CreateQueueResponse){
+        // option (google.api.http) = {
+        //     post: "/v1/queue"
+        //     body: "*"
+        // };
+    };
+    rpc SendMessage(SendMessageRequest) returns (SendMessageResponse){
+        // option (google.api.http) = {
+        //     post: "/v1/message"
+        //     body: "*"
+        // };
+    };
+    rpc ReceiveMessage(ReceiveMessageRequest) returns (stream ReceiveMessageResponse){
+        // option (google.api.http) = {
+        //     get: "/v1/message"
+        // };
+    };
 }

@@ -1,4 +1,4 @@
-package main
+package sqs
 
 import (
 	"encoding/json"

@@ -2,7 +2,8 @@ syntax = "proto3";
 
 package iam;
 
-option go_package = ".;proto";
+option go_package = "./;aws";
+
 message Credentials { 
     string access_key_id = 1;
     string secret_access_key = 2;
