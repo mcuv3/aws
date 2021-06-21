@@ -11,9 +11,9 @@ import (
 
 func main(){
 
-	itc := NewAuthInterceptor("---")
-	
-	conn, err  := grpc.Dial("localhost:6002",itc.Unary())
+	// itc := NewAuthInterceptor("---")
+
+	conn, err  := grpc.Dial("localhost:6002")//,itc.Unary())
 
 	if err !=nil { 
 		log.Fatal("Unable to connect with the server.")

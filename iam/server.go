@@ -14,6 +14,7 @@ import (
 
 type IAMService struct {
 	aws.UnimplementedIAMServiceServer
+	storage *PostgreStorage
 }
 
 
@@ -31,9 +32,13 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
 
+	db ,_ := NewPostgreStorage("")
+
+
+
 	s := grpc.NewServer()
 
-	aws.RegisterIAMServiceServer(s,&IAMService{})
+	aws.RegisterIAMServiceServer(s,&IAMService{storage: db})
 	reflection.Register(s)
 
 	l.Info().Str("server","iam").Msg("Staring server on port :50051")

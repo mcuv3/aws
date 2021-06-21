@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package backend;
+option go_package = ".;backend";
+
+service Backend {
+    rpc CreatePolicy(CreatePolicyRequest) returns (CreatePolicyResponse);
+    rpc GetPolicy(GetPolicyRequest) returns (GetPolicyResponse);
+    rpc UpdatePolicy(UpdatePolicyRequest) returns (UpdatePolicyResponse);
+    rpc DeletePolicy(DeletePolicyRequest) returns (DeletePolicyResponse);
+
+}
+
+message Policy {
+    uint32 id = 1;
+    string name = 2;
+    string manifest = 3;
+    uint32 accountId = 4;
+}
+
+message CreatePolicyRequest {
+    Policy policy = 1;
+}
+
+message CreatePolicyResponse {
+    Policy created = 1;
+}
+
+message GetPolicyRequest {
+    uint32 id = 1;
+}
+
+message GetPolicyResponse {
+    Policy policy = 1;
+}
+
+message UpdatePolicyRequest {
+    Policy updated = 1;
+}
+
+message UpdatePolicyResponse {
+    Policy result = 1;
+}
+
+message DeletePolicyRequest {
+    uint32 id = 1;
+}
+
+message DeletePolicyResponse {
+
+}

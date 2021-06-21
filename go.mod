@@ -16,6 +16,7 @@ require (
 	github.com/lib/pq v1.6.0 // indirect
 	github.com/qinains/fastergoding v0.0.2
 	github.com/rs/zerolog v1.23.0
+	github.com/sashabaranov/pike v0.0.0-20201027131531-73d54a00d086 // indirect
 	github.com/valyala/fasthttp v1.24.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a // indirect

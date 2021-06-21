@@ -5,6 +5,6 @@ type ErrorResponse struct {
 	Message string
 }
 
-type SuccessResponse struct { 
+type SuccessResponse struct {
 	Message string
 }
