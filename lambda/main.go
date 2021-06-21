@@ -8,7 +8,7 @@ import (
 
 
 func main(){
-	db,err := database.New("lambda")
+	db,err := database.New()
 	_ = db
 
 	if err!=nil{

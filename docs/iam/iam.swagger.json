@@ -1,0 +1,107 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "iam/iam.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "IAMService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "iamCreateUserResponse": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "#/definitions/iamUser"
+        }
+      }
+    },
+    "iamCredentials": {
+      "type": "object",
+      "properties": {
+        "accessKeyId": {
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    },
+    "iamPolicy": {
+      "type": "object",
+      "properties": {
+        "policy": {
+          "type": "string"
+        }
+      }
+    },
+    "iamUser": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "arn": {
+          "type": "string"
+        },
+        "credentials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/iamCredentials"
+          }
+        },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/iamPolicy"
+          }
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

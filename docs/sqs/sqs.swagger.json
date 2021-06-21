@@ -1,0 +1,279 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "sqs/sqs.proto",
+    "version": "version not set"
+  },
+  "tags": [
+    {
+      "name": "SQSService"
+    }
+  ],
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/v1/message": {
+      "get": {
+        "operationId": "SQSService_ReceiveMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.(streaming responses)",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "$ref": "#/definitions/sqsReceiveMessageResponse"
+                },
+                "error": {
+                  "$ref": "#/definitions/rpcStatus"
+                }
+              },
+              "title": "Stream result of sqsReceiveMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "queue.Id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "queue.name",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "queue.accountId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials.accessKeyId",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials.secretAccessKey",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "credentials.region",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "SQSService"
+        ]
+      },
+      "post": {
+        "operationId": "SQSService_SendMessage",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/sqsSendMessageResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sqsSendMessageRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SQSService"
+        ]
+      }
+    },
+    "/v1/queue": {
+      "post": {
+        "operationId": "SQSService_CreateQueue",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/sqsCreateQueueResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/rpcStatus"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/sqsCreateQueueRequest"
+            }
+          }
+        ],
+        "tags": [
+          "SQSService"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "iamCredentials": {
+      "type": "object",
+      "properties": {
+        "accessKeyId": {
+          "type": "string"
+        },
+        "secretAccessKey": {
+          "type": "string"
+        },
+        "region": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "typeUrl": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "responsesBaseResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "rpcStatus": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "sqsCreateQueueRequest": {
+      "type": "object",
+      "properties": {
+        "queue": {
+          "$ref": "#/definitions/sqsQueue"
+        },
+        "credentials": {
+          "$ref": "#/definitions/iamCredentials"
+        }
+      }
+    },
+    "sqsCreateQueueResponse": {
+      "type": "object",
+      "properties": {
+        "queue": {
+          "$ref": "#/definitions/sqsQueue"
+        }
+      }
+    },
+    "sqsMessage": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "sqsQueue": {
+      "type": "object",
+      "properties": {
+        "Id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "accountId": {
+          "type": "string"
+        }
+      }
+    },
+    "sqsReceiveMessageResponse": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/sqsMessage"
+        }
+      }
+    },
+    "sqsSendMessageRequest": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "$ref": "#/definitions/sqsMessage"
+        },
+        "credentials": {
+          "$ref": "#/definitions/iamCredentials"
+        }
+      }
+    },
+    "sqsSendMessageResponse": {
+      "type": "object",
+      "properties": {
+        "response": {
+          "$ref": "#/definitions/responsesBaseResponse"
+        }
+      }
+    }
+  }
+}

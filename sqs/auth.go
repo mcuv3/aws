@@ -1,10 +1,9 @@
-package main
+package sqs
 
 import (
+	"github.com/MauricioAntonioMartinez/aws/model"
 	"github.com/form3tech-oss/jwt-go"
 	"github.com/gofiber/fiber/v2"
-
-	"github.com/MauricioAntonioMartinez/aws/model"
 )
 
 func login(c *fiber.Ctx) error {
@@ -26,3 +25,14 @@ func login(c *fiber.Ctx) error {
 
 	return c.JSON(fiber.Map{"token": t})
 }
+
+
+func checkCredentials(token *jwt.Token) string {
+
+	claims := token.Claims.(jwt.MapClaims)
+
+	accountId := claims["accountId"].(string)
+	
+	return accountId
+}
+

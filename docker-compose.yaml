@@ -1,16 +1,27 @@
 version: '3.1'
 
 services:
-  kebeb:
+  sqs:
     build: .
     ports: 
-        - "4000:3000"
-    environment: 
-        SECRET: supersecret
+        - "6001:50051"
+    env_file: 
+      ./env/sqs.env
     volumes: 
         - .:/app
+    environment: 
+      SERVICE: sqs
     depends_on: 
       - db
+  iam:
+    build: .
+    ports: 
+        - "6002:50051"
+    volumes: 
+        - .:/app
+    environment: 
+      SERVICE: iam
+    
   
   cache:
     image: redis

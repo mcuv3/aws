@@ -1,16 +1,17 @@
-FROM golang AS build
+FROM golang 
 
 WORKDIR /app
 
+
 COPY . .
 
-RUN go get
+RUN chmod +x ./air
 
+RUN go install
 
-EXPOSE 3000
-
+EXPOSE 50051
 
 ENV SECRET=supersecret
 
 
-CMD [ "go","run","./..." ]
+CMD [ "./air" ]

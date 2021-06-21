@@ -1,0 +1,57 @@
+package main
+
+import (
+	"flag"
+	"fmt"
+	"os"
+
+	"github.com/MauricioAntonioMartinez/aws/iam"
+	"github.com/MauricioAntonioMartinez/aws/sqs"
+
+	// "github.com/qinains/fastergoding"
+	"github.com/rs/zerolog"
+)
+
+
+var (
+	service =  flag.String("svc","","The aws service to start")
+
+)
+
+func main() {
+	flag.Parse()
+ 
+	fmt.Println(*service)
+	// fastergoding.Run()
+
+
+	
+	svc := *service
+
+	if svc == "" {
+		svc = os.Getenv("SERVICE")
+	} 
+
+	
+	l := logger()
+	
+		
+	switch(svc) {  
+	case "sqs":
+		if err := sqs.Run(l); err !=nil {
+			l.Fatal().Msg("Unable to start sqs service.")
+		}
+	case "iam":
+		if err := iam.Run(l); err !=nil {
+			l.Fatal().Msg("Unable to start iam service.")
+		}
+	}
+}
+
+func logger() zerolog.Logger { 
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+	w := zerolog.ConsoleWriter{Out: os.Stderr}
+	l := zerolog.New(w).With().Timestamp().Caller().Logger()
+	return l 
+}
+
