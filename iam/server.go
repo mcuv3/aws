@@ -1,9 +1,9 @@
 package iam
 
 import (
-	"context"
 	"net"
 
+	database "github.com/MauricioAntonioMartinez/aws/db"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -14,13 +14,9 @@ import (
 
 type IAMService struct {
 	aws.UnimplementedIAMServiceServer
-	storage *PostgreStorage
+	storage *IamRepository
 }
 
-
-func (*IAMService) CreateUser(ctx context.Context,req *aws.CreateUserRequest)(*aws.CreateUserResponse,error) {
-	return nil,nil
-}
 
 
 func Run(l zerolog.Logger) error { 
@@ -32,33 +28,23 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
 
-	db ,_ := NewPostgreStorage("")
+	db,err := database.New()
 
+	if err !=nil { 
+		l.Fatal().Err(err).Msg("Unable to connect to the database.")
+	}
 
 
 	s := grpc.NewServer()
-
-	aws.RegisterIAMServiceServer(s,&IAMService{storage: db})
+	aws.RegisterIAMServiceServer(s,&IAMService{storage: &IamRepository{db: db}})
+	
 	reflection.Register(s)
 
 	l.Info().Str("server","iam").Msg("Staring server on port :50051")
 
-
-	// go func() error {
 		if err:= s.Serve(lis); err !=nil { 
 			return nil
 		}
 		return err
-	// }()
 
-	// ch := make(chan os.Signal,1)
-
-	// signal.Notify(ch,os.Interrupt)
-
-
-	// <- ch
-
-	// s.Stop()
-	// l.Info().Str("server","iam").Msg("The server is closed.")
-	// return nil
 }

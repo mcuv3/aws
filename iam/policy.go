@@ -9,13 +9,13 @@ import (
 )
 
 func (s *IAMService) CreatePolicy(ctx context.Context, req *aws.CreatePolicyRequest) (*aws.CreatePolicyResponse, error) {
-	created, err := s.storage.CreatePolicy(req.Policy)
+	_, err := s.storage.CreatePolicy(req.Policy)
 	if err != nil {
 		reportError("Error in CreatePolicy", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return &aws.CreatePolicyResponse{
-		Created: created,
+		// Created: created,
 	}, nil
 }
 

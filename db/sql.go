@@ -1,18 +1,25 @@
 package database
 
-type SqlDatabase struct{}
+import "gorm.io/gorm"
+
+type SqlDatabase struct {
+	db *gorm.DB
+}
 
 func (db *SqlDatabase) Create(record *interface{}) error {
-
-	return nil
+	 return db.create(record)
 }
 
-func (db *SqlDatabase) connect(interface{}) bool {
-	return true
+func (db *SqlDatabase) connect(config gorm.Dialector) error {
+	d,err := gorm.Open(config)
+	db.db = d;
+	return err
 }
-func (db *SqlDatabase) get(record *interface{}, conditions interface{}) error {
-	return nil
+func (db *SqlDatabase) findOne(record *interface{}, conditions interface{}) error {
+	  db.db.First(record,conditions)
+	 return nil;
 }
+
 func (db *SqlDatabase) getMany(record *[]interface{}, conditions interface{}) error {
 	return nil
 }

@@ -4,8 +4,6 @@ package sqs;
 
 option go_package = "./;aws";
 
-import "iam.proto";
-
 
 
 message Message {
@@ -23,7 +21,6 @@ message Queue {
 
 message CreateQueueRequest { 
     Queue queue = 1;
-    iam.Credentials credentials = 2;
 }
 
 message CreateQueueResponse { 
@@ -32,7 +29,6 @@ message CreateQueueResponse {
 
 message SendMessageRequest {
     Message message = 1;
-    iam.Credentials credentials = 2;
 }
 
 message SendMessageResponse {
@@ -41,7 +37,6 @@ message SendMessageResponse {
 
 message ReceiveMessageRequest {
     Queue queue = 1;
-    iam.Credentials credentials = 2;
 }
 
 message ReceiveMessageResponse {

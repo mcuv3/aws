@@ -1,6 +1,8 @@
 package database
 
-type NoSqlDatabase struct{}
+type NoSqlDatabase struct{
+	
+}
 
 func (db *NoSqlDatabase) Create(record *interface{}) error {
 
