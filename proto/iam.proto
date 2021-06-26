@@ -49,6 +49,12 @@ message Role {
     repeated Policy policies = 4;
 }
 
+message AwsUser { 
+    uint32 id = 1;
+    string email = 2;
+    string account_id = 3;
+}
+
 message User {
     uint32 id = 1;
     string name = 2;
@@ -85,6 +91,7 @@ message SignUpRequest {
 
 message SignUpResponse { 
     bool succeed = 1;
+    string account_id  = 2;
 }
 
 message LoginResponse { 

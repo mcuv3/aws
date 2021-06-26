@@ -16,7 +16,7 @@ type IamRepository struct {
 func (storage *IamRepository) CreatePolicy(in *aws.Policy) (* model.Policy, error) {
 	
 	p := model.Policy{Name: in.Name,Description: in.GetDescription(),
-		Manifest: in.GetManifest(),Arn: "aws",AccountId: 231}
+		Manifest: in.GetManifest(),Arn: "aws",AccountId: "231"}
 
 	tx := storage.db.Create(&p)
 	return &p,tx.Error

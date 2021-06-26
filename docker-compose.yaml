@@ -1,8 +1,19 @@
-version: '3.1'
+version: '3.3'
+
+
+x-db: &defaults-db
+  image: postgres
+  restart: always
+  environment:
+    POSTGRES_PASSWORD: maotrix1
+    POSTGRES_USER: mcuve
+    POSTGRES_DB: db
+
 
 services:
   sqs:
     build: .
+    container_name: sqs
     ports: 
         - "6001:50051"
     env_file: 
@@ -12,35 +23,51 @@ services:
     environment: 
       SERVICE: sqs
     depends_on: 
-      - db
+      - sqs-db
   iam:
     build: .
+    container_name: iam
     ports: 
         - "6002:50051"
+    env_file: 
+      ./env/iam.env
     volumes: 
         - .:/app
     environment: 
       SERVICE: iam
+    depends_on: 
+      - iam-db
     
-  
   cache:
     image: redis
     ports: 
       - "6666:6379"
-
-  db:
-    image: postgres
-    restart: always
-    volumes: 
-      - sqs-data:/var/lib/postgresql/data 
+  
+  admin: 
+    image: dpage/pgadmin4
+    container_name: admin
     ports: 
-        - "5432:5432"
-    environment:
-      POSTGRES_PASSWORD: maotrix1
-      POSTGRES_USER: mcuve
-      POSTGRES_DB: sqs
+      - "5050:80"
+    environment: 
+      PGADMIN_DEFAULT_EMAIL: mcuve@outlook.com
+      PGADMIN_DEFAULT_PASSWORD: maotrix1
+    logging:
+      options:
+        max-size: "1m"
+        max-file: "1"
 
+  sqs-db:
+    <<: *defaults-db
+    container_name: sqs-db
+    volumes: 
+      - sqs-data:/var/lib/postgresql/data
+  iam-db:
+    <<: *defaults-db
+    container_name: iam-db
+    volumes: 
+      - iam-data:/var/lib/postgresql/data
 
 volumes: 
   sqs-data:
+  iam-data:
 
