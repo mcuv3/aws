@@ -31,7 +31,8 @@ service IAMService {
     rpc GetAccessKeys(GetAccessKeysRequest) returns (GetAccessKeysResponse);
     rpc DeleteAccessKeys(DeleteAccessKeysRequest) returns (DeleteAccessKeysResponse);
 
-    rpc Login(LoginRequest) returns (LoginResponse);
+    rpc UserLogin(UserLoginRequest) returns (LoginResponse);
+    rpc RootUserLogin(RootUserLoginRequest) returns (LoginResponse);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);
 }
 
@@ -75,12 +76,19 @@ message AccessKeys {
 }
 
 
-message LoginRequest { 
-    bool root_user = 1;
+message UserLoginRequest { 
     string account_id = 2;
-    string email = 3;
     string name = 4;
     string password = 5;
+}
+
+message RootUserLoginRequest { 
+    string email = 3;
+    string password = 5;
+}
+
+message LoginResponse { 
+    string token = 1;
 }
 
 message SignUpRequest { 
@@ -94,9 +102,6 @@ message SignUpResponse {
     string account_id  = 2;
 }
 
-message LoginResponse { 
-    string token = 1;
-}
 
 
 message CreatePolicyRequest {

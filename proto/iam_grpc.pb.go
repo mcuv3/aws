@@ -36,7 +36,8 @@ type IAMServiceClient interface {
 	CreateAccessKeys(ctx context.Context, in *CreateAccessKeysRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(ctx context.Context, in *GetAccessKeysRequest, opts ...grpc.CallOption) (*GetAccessKeysResponse, error)
 	DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*DeleteAccessKeysResponse, error)
-	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	RootUserLogin(ctx context.Context, in *RootUserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
 }
 
@@ -219,9 +220,18 @@ func (c *iAMServiceClient) DeleteAccessKeys(ctx context.Context, in *DeleteAcces
 	return out, nil
 }
 
-func (c *iAMServiceClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+func (c *iAMServiceClient) UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
 	out := new(LoginResponse)
-	err := c.cc.Invoke(ctx, "/iam.IAMService/Login", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/iam.IAMService/UserLogin", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iAMServiceClient) RootUserLogin(ctx context.Context, in *RootUserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, "/iam.IAMService/RootUserLogin", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +270,8 @@ type IAMServiceServer interface {
 	CreateAccessKeys(context.Context, *CreateAccessKeysRequest) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(context.Context, *GetAccessKeysRequest) (*GetAccessKeysResponse, error)
 	DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*DeleteAccessKeysResponse, error)
-	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error)
+	RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
 	mustEmbedUnimplementedIAMServiceServer()
 }
@@ -326,8 +337,11 @@ func (UnimplementedIAMServiceServer) GetAccessKeys(context.Context, *GetAccessKe
 func (UnimplementedIAMServiceServer) DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*DeleteAccessKeysResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccessKeys not implemented")
 }
-func (UnimplementedIAMServiceServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+func (UnimplementedIAMServiceServer) UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UserLogin not implemented")
+}
+func (UnimplementedIAMServiceServer) RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RootUserLogin not implemented")
 }
 func (UnimplementedIAMServiceServer) SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUp not implemented")
@@ -687,20 +701,38 @@ func _IAMService_DeleteAccessKeys_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _IAMService_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LoginRequest)
+func _IAMService_UserLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UserLoginRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IAMServiceServer).Login(ctx, in)
+		return srv.(IAMServiceServer).UserLogin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/iam.IAMService/Login",
+		FullMethod: "/iam.IAMService/UserLogin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMServiceServer).Login(ctx, req.(*LoginRequest))
+		return srv.(IAMServiceServer).UserLogin(ctx, req.(*UserLoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _IAMService_RootUserLogin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RootUserLoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMServiceServer).RootUserLogin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/iam.IAMService/RootUserLogin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMServiceServer).RootUserLogin(ctx, req.(*RootUserLoginRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -804,8 +836,12 @@ var _IAMService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _IAMService_DeleteAccessKeys_Handler,
 		},
 		{
-			MethodName: "Login",
-			Handler:    _IAMService_Login_Handler,
+			MethodName: "UserLogin",
+			Handler:    _IAMService_UserLogin_Handler,
+		},
+		{
+			MethodName: "RootUserLogin",
+			Handler:    _IAMService_RootUserLogin_Handler,
 		},
 		{
 			MethodName: "SignUp",

@@ -11,7 +11,6 @@ import (
 func (s *IAMService) CreateRole(ctx context.Context, req *aws.CreateRoleRequest) (*aws.CreateRoleResponse, error) {
 	created, err := s.storage.CreateRole(req.Role)
 	if err != nil {
-		reportError("Error in CreateRole", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return &aws.CreateRoleResponse{
@@ -22,7 +21,6 @@ func (s *IAMService) CreateRole(ctx context.Context, req *aws.CreateRoleRequest)
 func (s *IAMService) GetRole(ctx context.Context, req *aws.GetRoleRequest) (*aws.GetRoleResponse, error) {
 	ret, err := s.storage.GetRole(req.Id)
 	if err != nil {
-		reportError("Error in GetRole", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
@@ -34,7 +32,6 @@ func (s *IAMService) GetRole(ctx context.Context, req *aws.GetRoleRequest) (*aws
 func (s *IAMService) UpdateRole(ctx context.Context, req *aws.UpdateRoleRequest) (*aws.UpdateRoleResponse, error) {
 	updated, err := s.storage.UpdateRole(req.Updated)
 	if err != nil {
-		reportError("Error in UpdateRole", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
@@ -46,7 +43,6 @@ func (s *IAMService) UpdateRole(ctx context.Context, req *aws.UpdateRoleRequest)
 func (s *IAMService) DeleteRole(ctx context.Context, req *aws.DeleteRoleRequest) (*aws.DeleteRoleResponse, error) {
 	err := s.storage.DeleteRole(req.Id)
 	if err != nil {
-		reportError("Error in DeleteRole", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return &aws.DeleteRoleResponse{}, nil

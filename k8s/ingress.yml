@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: elb
+  labels:
+    name: elb
+spec:
+  rules:
+    - host: 80
+      http:
+        paths:
+          - pathType: Prefix
+            path: "/"
+            backend:
+              service:
+                name: iam
+                port:
+                  number: 80

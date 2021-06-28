@@ -8,10 +8,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *IAMService ) CreateAccessKeys(ctx context.Context, req *aws.CreateAccessKeysRequest) (*aws.CreateAccessKeysResponse, error) {
+func (s *IAMService) CreateAccessKeys(ctx context.Context, req *aws.CreateAccessKeysRequest) (*aws.CreateAccessKeysResponse, error) {
 	created, err := s.storage.CreateAccessKeys(req.AccessKeys)
 	if err != nil {
-		reportError("Error in CreateAccessKeys", err)
+		// s.Error("Error in CreateAccessKeys", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return &aws.CreateAccessKeysResponse{
@@ -19,10 +19,10 @@ func (s *IAMService ) CreateAccessKeys(ctx context.Context, req *aws.CreateAcces
 	}, nil
 }
 
-func (s *IAMService ) GetAccessKeys(ctx context.Context, req *aws.GetAccessKeysRequest) (*aws.GetAccessKeysResponse, error) {
+func (s *IAMService) GetAccessKeys(ctx context.Context, req *aws.GetAccessKeysRequest) (*aws.GetAccessKeysResponse, error) {
 	ret, err := s.storage.GetAccessKeys(req.Id)
 	if err != nil {
-		reportError("Error in GetAccessKeys", err)
+		// s.Error("Error in GetAccessKeys", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 
@@ -31,11 +31,9 @@ func (s *IAMService ) GetAccessKeys(ctx context.Context, req *aws.GetAccessKeysR
 	}, nil
 }
 
-
-func (s *IAMService ) DeleteAccessKeys(ctx context.Context, req *aws.DeleteAccessKeysRequest) (*aws.DeleteAccessKeysResponse, error) {
+func (s *IAMService) DeleteAccessKeys(ctx context.Context, req *aws.DeleteAccessKeysRequest) (*aws.DeleteAccessKeysResponse, error) {
 	err := s.storage.DeleteAccessKeys(req.Id)
 	if err != nil {
-		reportError("Error in DeleteAccessKeys", err)
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
 	return &aws.DeleteAccessKeysResponse{}, nil
