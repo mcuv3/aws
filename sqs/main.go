@@ -86,7 +86,7 @@ func (*SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQSSe
 
 func authConfig() *iam.AuthInterceptor {
 	 m := iam.NewJWTMannager("mysecret",time.Hour)
-	 return iam.NewAuthInterceptor(m,"iam")
+	 return iam.NewAuthInterceptor(m,"sqs")
 }
 
 func Run(l zerolog.Logger) error {
@@ -117,7 +117,7 @@ func Run(l zerolog.Logger) error {
 	}
 
 	iamInterceptor := authConfig()
-
+ 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(iamInterceptor.Unary()))
 
 	aws.RegisterSQSServiceServer(s,&SQSServer{})

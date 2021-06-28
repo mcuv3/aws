@@ -1,125 +1,42 @@
 package iam
 
-import aws "github.com/MauricioAntonioMartinez/aws/proto"
+import (
+	"github.com/MauricioAntonioMartinez/aws/model"
+	aws "github.com/MauricioAntonioMartinez/aws/proto"
+	"gorm.io/gorm"
+)
 
-func (storage *PostgreStorage) CreatePolicy(in *aws.Policy) (*aws.Policy, error) {
-	stmt, err := storage.db.Prepare(`
-		INSERT INTO policys(
-			name,
-			manifest,
-			accountId
-		)
-		VALUES ($1,$2,$3)
-		RETURNING id;
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	err = stmt.QueryRow(
-		 in.Name,
-		 in.Manifest,
-		 in.AccountId,
-	).Scan(
-		&(in.Id),
-	)
-
-	return in, err
+type IamRepository struct {
+	db  *gorm.DB
 }
 
 
-func (storage *PostgreStorage) DeletePolicy(id uint32) error {
-	stmt, err := storage.db.Prepare("DELETE FROM policys WHERE id=$1;")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
 
-	_, err = stmt.Exec(id)
-	if err != nil {
-		return err
-	}
+
+func (storage *IamRepository) CreatePolicy(in *aws.Policy) (* model.Policy, error) {
+	
+	p := model.Policy{Name: in.Name,Description: in.GetDescription(),
+		Manifest: in.GetManifest(),Arn: "aws",AccountId: "231"}
+
+	tx := storage.db.Create(&p)
+	return &p,tx.Error
+	
+}
+
+
+func (storage *IamRepository) DeletePolicy(id uint32) error {
 
 	return nil
 }
 
 
-func (storage *PostgreStorage) GetPolicy(id uint32) (*aws.Policy, error) {
-	stmt, err := storage.db.Prepare(`
-		SELECT
-			id,
-			name,
-			manifest,
-			accountId
-		FROM policys
-		WHERE id=$1;
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
+func (storage *IamRepository) GetPolicy(id uint32) (*aws.Policy, error) {
 
-	ret := &aws.Policy{}
-	err = stmt.QueryRow(id).Scan(
-		&ret.Id,
-		&ret.Name,
-		&ret.Manifest,
-		&ret.AccountId,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return ret, nil
+	return nil, nil
 }
 
 
-func (storage *PostgreStorage) UpdatePolicy(updated *aws.Policy) (*aws.Policy, error) {
-	tx, err := storage.db.Begin()
-	if err != nil {
-		return nil, err
-	}
+func (storage *IamRepository) UpdatePolicy(updated *aws.Policy) (*aws.Policy, error) {
 
-	stmt, err := tx.Prepare(`
-		UPDATE policys
-		SET
-			name=$1,
-			manifest=$2,
-			accountId=$3
-		WHERE
-			id=$5
-		RETURNING
-			id,
-			name,
-			manifest,
-			accountId
-		;
-	`)
-	if err != nil {
-		return nil, err
-	}
-	defer stmt.Close()
-
-	ret := &aws.Policy{}
-	err = stmt.QueryRow(
-		updated.Name,
-		updated.Manifest,
-		updated.AccountId,
-	).Scan(
-		&ret.Id,
-		&ret.Name,
-		&ret.Manifest,
-		&ret.AccountId,
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	err = tx.Commit()
-	if err != nil {
-		tx.Rollback()
-	}
-
-	return ret, err
+	return nil,nil
 }
