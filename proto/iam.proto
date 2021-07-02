@@ -61,7 +61,9 @@ message User {
     string name = 2;
     string description = 3;
     repeated Policy policies = 4;
-    string access_keys = 5;
+    string password = 5;
+    string Arn = 6;
+    
 }
 
 message Group {

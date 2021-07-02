@@ -2,7 +2,6 @@ package iam
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -12,12 +11,28 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func (storage *IamRepository) CreateUser(in *aws.User) (*aws.User, error) {
+func (storage *IamRepository) CreateUser(us *aws.User,accountId string) (*model.UserIam, error) {
 
-	return nil, nil
+
+	encrypted, err := bcrypt.GenerateFromPassword([]byte(us.Password), 10)
+
+	if err != nil {
+		return nil, err
+	}
+
+
+	user := model.UserIam{Password: string(encrypted),Arn: "",Description: us.Description,Polices: []*model.Policy{{Name: "FullAccess",AccountId: accountId,Arn: "", Description: "Test"}}, Name: us.Name, AccountId: accountId}
+
+	res := storage.db.Create(&us)
+
+	if res.Error != nil {
+		return nil, res.Error
+	}
+
+	return &user, nil
 }
 
-func (storage *IamRepository) CreateAwsUser(email string, password string, confPass string) (*model.AwsUser, error) {
+func (storage *IamRepository) CreateRootUser(email string, password string, confPass string) (*model.AwsUser, error) {
 
 	if password != confPass {
 		return nil, errors.New("Passwords does not match")
@@ -39,7 +54,6 @@ func (storage *IamRepository) CreateAwsUser(email string, password string, confP
 	if res.Error != nil {
 		return nil, res.Error
 	}
-	fmt.Println(us)
 
 	return &us, nil
 

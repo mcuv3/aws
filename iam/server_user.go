@@ -2,11 +2,9 @@ package iam
 
 import (
 	"context"
-	"fmt"
 
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
@@ -17,17 +15,21 @@ func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest)
 	// 	return nil, status.Error(codes.Internal, "Internal error")
 	// }
 
-	md, ok := metadata.FromIncomingContext(ctx)
+	user ,err := s.auth.GetUserMetadata(ctx)
 
-	if !ok {
-		return nil, status.Errorf(codes.InvalidArgument, "Cannot extract data from context")
+	if err != nil { 
+		s.logger.Err(err).Msg(err.Error())
+		return nil,s.Error(err,codes.Unauthenticated,"Unauthorized.")
 	}
+	
+ 	created ,err := s.storage.CreateUser(req.User,user.AccountId)
 
-	fmt.Println("Context Data")
-	fmt.Println(md)
+	 if err !=nil  { 
+		 return nil,s.Error(err,codes.Internal,"Unable to create a iam user.")
+	 }
 
 	return &aws.CreateUserResponse{
-		Created: &aws.User{},
+		Created: &aws.User{Id: uint32(created.ID),Name: created.Name,Description: created.Description,Arn: created.Arn},
 	}, nil
 }
 

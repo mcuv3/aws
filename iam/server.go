@@ -39,6 +39,8 @@ func Run(logger zerolog.Logger) error {
 	runMigrations(db)
 
 	authInt := auth.AuthInterceptor{Issuer: "iam", Logger: logger,
+	ServerPrefix: "/iam.IAMService/",
+	PublicMethods: []string{"RootUserLogin"},
 		Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary()))

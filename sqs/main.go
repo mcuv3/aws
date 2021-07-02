@@ -6,8 +6,8 @@ import (
 	"net"
 	"time"
 
+	"github.com/MauricioAntonioMartinez/aws/auth"
 	database "github.com/MauricioAntonioMartinez/aws/db"
-	"github.com/MauricioAntonioMartinez/aws/iam"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -84,9 +84,9 @@ func (*SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQSSe
 
 
 
-func authConfig() *iam.AuthInterceptor {
-	 m := iam.NewJWTMannager("mysecret",time.Hour)
-	 return iam.NewAuthInterceptor(m,"sqs")
+func authConfig() *auth.AuthInterceptor {
+	 m := auth.NewJWTMannager("mysecret",time.Hour)
+	 return auth.NewAuthInterceptor(m,"sqs")
 }
 
 func Run(l zerolog.Logger) error {

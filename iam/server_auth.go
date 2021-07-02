@@ -71,7 +71,7 @@ func (s *IAMService) SignUp(ctx context.Context, req *aws.SignUpRequest) (*aws.S
 	pass := req.GetPassword()
 	passConfirm := req.GetConfirmPassword()
 
-	user, err := s.storage.CreateAwsUser(email, pass, passConfirm)
+	user, err := s.storage.CreateRootUser(email, pass, passConfirm)
 
 	if err != nil {
 		s.logger.Err(err).AnErr("Aws-User", err).Msg("Error createing an aws root user.")
