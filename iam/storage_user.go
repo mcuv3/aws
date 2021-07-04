@@ -2,6 +2,7 @@ package iam
 
 import (
 	"errors"
+	"fmt"
 	"math/rand"
 	"strconv"
 	"time"
@@ -9,21 +10,35 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm/clause"
 )
 
-func (storage *IamRepository) CreateUser(us *aws.User,accountId string) (*model.UserIam, error) {
+func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) (*model.User, error) {
 
 
-	encrypted, err := bcrypt.GenerateFromPassword([]byte(us.Password), 10)
+	encrypted, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
 	if err != nil {
 		return nil, err
 	}
+ 
+	// polices := make([]model.Policy,0)
+
+	// for _,p:= range us.Policies { 
+	// 	 polices = append(polices, model.Policy{
+	// 		 Name:p.Name,
+	// 		 Description: p.Description,
+	// 		 Arn1
+	// 	 })
+	// }
 
 
-	user := model.UserIam{Password: string(encrypted),Arn: "",Description: us.Description,Polices: []*model.Policy{{Name: "FullAccess",AccountId: accountId,Arn: "", Description: "Test"}}, Name: us.Name, AccountId: accountId}
-
-	res := storage.db.Create(&us)
+	user := model.User{
+	Password: string(encrypted),Arn: "",
+	Description: us.Description, Name: us.Name,
+	 AccountId: accountId}
+fmt.Println(user)
+	res := storage.db.Omit(clause.Associations).Create(&user)
 
 	if res.Error != nil {
 		return nil, res.Error
@@ -32,7 +47,7 @@ func (storage *IamRepository) CreateUser(us *aws.User,accountId string) (*model.
 	return &user, nil
 }
 
-func (storage *IamRepository) CreateRootUser(email string, password string, confPass string) (*model.AwsUser, error) {
+func (storage *IamRepository) CreateRootUser(email string, password string, confPass string) (*model.RootUser, error) {
 
 	if password != confPass {
 		return nil, errors.New("Passwords does not match")
@@ -47,7 +62,7 @@ func (storage *IamRepository) CreateRootUser(email string, password string, conf
 
 	accountId := rand.Intn(9999999999-1000000000) + 1000000000
 
-	us := model.AwsUser{Password: string(encrypted), Email: email, AccountId: strconv.Itoa(accountId)}
+	us := model.RootUser{Password: string(encrypted), Email: email, AccountId: strconv.Itoa(accountId)}
 
 	res := storage.db.Create(&us)
 
@@ -64,8 +79,8 @@ func (storage *IamRepository) DeleteUser(id uint32) error {
 	return nil
 }
 
-func (storage *IamRepository) FindUser(query string, args ...interface{}) (*model.UserIam, error) {
-	us := &model.UserIam{}
+func (storage *IamRepository) FindRootUser(query string, args ...interface{}) (*model.RootUser, error) {
+	us := &model.RootUser{}
 
 	tx := storage.db.Where(query, args).First(us)
 
@@ -76,8 +91,8 @@ func (storage *IamRepository) FindUser(query string, args ...interface{}) (*mode
 	return us, nil
 }
 
-func (storage *IamRepository) FindAwsUser(query, args string) (*model.AwsUser, error) {
-	us := &model.AwsUser{}
+func (storage *IamRepository) FindUser(query string, args ...interface{}) (*model.User, error) {
+	us := &model.User{}
 	tx := storage.db.Where(query, args).First(us)
 
 	if tx.Error != nil {

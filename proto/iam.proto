@@ -2,6 +2,9 @@ syntax = "proto3";
 
 package iam;
 
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/empty.proto";
+
 option go_package = "./;aws";
 
 
@@ -20,16 +23,16 @@ service IAMService {
     rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
     rpc GetUser(GetUserRequest) returns (GetUserResponse);
     rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
-    rpc DeleteUser(DeleteUserRequest) returns (DeleteUserResponse);
+    rpc DeleteUser(DeleteUserRequest) returns (google.protobuf.Empty);
 
     rpc CreateGroup(CreateGroupRequest) returns (CreateGroupResponse);
     rpc GetGroup(GetGroupRequest) returns (GetGroupResponse);
     rpc UpdateGroup(UpdateGroupRequest) returns (UpdateGroupResponse);
     rpc DeleteGroup(DeleteGroupRequest) returns (DeleteGroupResponse);
 
-    rpc CreateAccessKeys(CreateAccessKeysRequest) returns (CreateAccessKeysResponse);
+    rpc CreateAccessKeys(CreateAccessKeyRequest) returns (CreateAccessKeysResponse);
     rpc GetAccessKeys(GetAccessKeysRequest) returns (GetAccessKeysResponse);
-    rpc DeleteAccessKeys(DeleteAccessKeysRequest) returns (DeleteAccessKeysResponse);
+    rpc DeleteAccessKeys(DeleteAccessKeysRequest) returns (google.protobuf.Empty);
 
     rpc UserLogin(UserLoginRequest) returns (LoginResponse);
     rpc RootUserLogin(RootUserLoginRequest) returns (LoginResponse);
@@ -43,6 +46,13 @@ message Policy {
     string description = 4;
 }
 
+message PolicyCreation { 
+    string name = 1;
+    string manifest = 2;
+    string description = 3;
+}
+
+
 message Role {
     uint32 id = 1;
     string name = 2;
@@ -50,7 +60,7 @@ message Role {
     repeated Policy policies = 4;
 }
 
-message AwsUser { 
+message RootUser { 
     uint32 id = 1;
     string email = 2;
     string account_id = 3;
@@ -61,9 +71,8 @@ message User {
     string name = 2;
     string description = 3;
     repeated Policy policies = 4;
-    string password = 5;
-    string Arn = 6;
-    
+    string arn = 5;
+    uint32 group_id = 6;
 }
 
 message Group {
@@ -73,8 +82,10 @@ message Group {
     repeated User users = 4;
 }
 
-message AccessKeys {
-    uint32 id = 1;
+message AccessKey {
+    string access_key_id = 1;
+    string secret_access_key_id = 2;
+    google.protobuf.Timestamp created_at = 3;
 }
 
 
@@ -169,7 +180,10 @@ message DeleteRoleRequest {
 message DeleteRoleResponse {}
 
 message CreateUserRequest {
-    User user = 1;
+    string name = 1;
+    string description = 2;
+    string password = 3;
+    repeated PolicyCreation polices = 4;
 }
 
 message CreateUserResponse {
@@ -196,9 +210,7 @@ message DeleteUserRequest {
     uint32 id = 1;
 }
 
-message DeleteUserResponse {
 
-}
 
 message CreateGroupRequest {
     Group group = 1;
@@ -232,34 +244,32 @@ message DeleteGroupResponse {
 
 }
 
-message CreateAccessKeysRequest {
-    AccessKeys accessKeys = 1;
+
+message CreateAccessKeyRequest { 
+    uint32 user_id = 1;
 }
 
 message CreateAccessKeysResponse {
-    AccessKeys created = 1;
+    AccessKey created = 1;
 }
 
 message GetAccessKeysRequest {
-    uint32 id = 1;
+    uint32 user_id = 1;
 }
 
 message GetAccessKeysResponse {
-    AccessKeys accessKeys = 1;
+    AccessKey accessKeys = 1;
 }
 
 message UpdateAccessKeysRequest {
-    AccessKeys updated = 1;
+    AccessKey updated = 1;
 }
 
 message UpdateAccessKeysResponse {
-    AccessKeys result = 1;
+    AccessKey result = 1;
 }
 
 message DeleteAccessKeysRequest {
-    uint32 id = 1;
+    string access_key_id = 1;
 }
 
-message DeleteAccessKeysResponse {
-
-}

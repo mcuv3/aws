@@ -20,7 +20,7 @@ var times = [3]string{"second", "minute", "hour"}
 
 type UserMessageId string;
 
-type User struct {
+type SqsUser struct {
 	gorm.Model
 	AccountId string `gorm:"primaryKey"`
 	Queues    []Queue
@@ -68,7 +68,7 @@ type DeleteMessageBody struct {
 	Ids []UserMessageId
 }
 
-func (u *User) JSON() string {
+func (u *SqsUser) JSON() string {
 	data, _ := json.Marshal(u)
 	return string(data)
 }

@@ -2,10 +2,13 @@ package iam
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/MauricioAntonioMartinez/aws/auth"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest) (*aws.CreateUserResponse, error) {
@@ -21,15 +24,30 @@ func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest)
 		s.logger.Err(err).Msg(err.Error())
 		return nil,s.Error(err,codes.Unauthenticated,"Unauthorized.")
 	}
-	
- 	created ,err := s.storage.CreateUser(req.User,user.AccountId)
+
+	arn ,err := auth.NewArn(auth.IAM,"",user.AccountId,fmt.Sprintf("/user/%s",req.Name))
+
+	if err !=nil { 
+		return nil, s.Error(err,codes.Internal,"Unable to generate arn.")
+	}
+
+ 	created ,err := s.storage.CreateUser(aws.User{
+		Name: req.GetName(),
+		Description: req.GetDescription(),
+		Arn: arn.String(),
+	 },req.GetPassword(),user.AccountId)
 
 	 if err !=nil  { 
 		 return nil,s.Error(err,codes.Internal,"Unable to create a iam user.")
 	 }
 
+
 	return &aws.CreateUserResponse{
-		Created: &aws.User{Id: uint32(created.ID),Name: created.Name,Description: created.Description,Arn: created.Arn},
+		Created: &aws.User{Id: uint32(created.ID),
+		Name: created.Name,
+		Description: created.Description,
+		Arn: arn.String(),
+	},
 	}, nil
 }
 
@@ -53,10 +71,10 @@ func (s *IAMService) UpdateUser(ctx context.Context, req *aws.UpdateUserRequest)
 	}, nil
 }
 
-func (s *IAMService) DeleteUser(ctx context.Context, req *aws.DeleteUserRequest) (*aws.DeleteUserResponse, error) {
+func (s *IAMService) DeleteUser(ctx context.Context, req *aws.DeleteUserRequest) (*emptypb.Empty, error) {
 	err := s.storage.DeleteUser(req.Id)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
 	}
-	return &aws.DeleteUserResponse{}, nil
+	return &emptypb.Empty{}, nil
 }

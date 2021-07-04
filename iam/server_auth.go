@@ -16,7 +16,7 @@ func (s *IAMService) RootUserLogin(ctx context.Context, req *aws.RootUserLoginRe
 	email := req.GetEmail()
 	password := req.GetPassword()
 
-	us, err := s.storage.FindAwsUser("email = ?", email)
+	us, err := s.storage.FindRootUser("email = ?", email)
 
 	if err != nil {
 		return nil, s.Error(err, codes.Internal, "Unable to find user")
