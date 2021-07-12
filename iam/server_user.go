@@ -12,11 +12,6 @@ import (
 )
 
 func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest) (*aws.CreateUserResponse, error) {
-	// created, err := s.storage.CreateUser(req.User)
-
-	// if err != nil {
-	// 	return nil, status.Error(codes.Internal, "Internal error")
-	// }
 
 	user ,err := s.auth.GetUserMetadata(ctx)
 

@@ -7,11 +7,27 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm/clause"
 )
+
+
+func policyToGorm(polices []*aws.Policy,accountId string) []model.Policy {
+	ps := []model.Policy{}
+
+	
+	for _,v:= range polices { 
+		arn ,_ := auth.NewArn(auth.IAM,auth.REGION_NONE,accountId,fmt.Sprintf("/policy/%s",v.Name))
+		 ps = append(ps, model.Policy{
+			 Name: v.Name,
+			 Arn: arn.String(),
+		 })
+	}
+
+	return ps
+}
 
 func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) (*model.User, error) {
 
@@ -21,24 +37,17 @@ func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) 
 	if err != nil {
 		return nil, err
 	}
- 
-	// polices := make([]model.Policy,0)
-
-	// for _,p:= range us.Policies { 
-	// 	 polices = append(polices, model.Policy{
-	// 		 Name:p.Name,
-	// 		 Description: p.Description,
-	// 		 Arn1
-	// 	 })
-	// }
+	arn,_ := auth.NewArn(auth.IAM,auth.REGION_NONE,accountId,fmt.Sprintf("/user/%s",us.Name))
 
 
 	user := model.User{
-	Password: string(encrypted),Arn: "",
+	Password: string(encrypted),
+	Arn: arn.String(),	
+	Polices: policyToGorm(us.Policies,accountId),
 	Description: us.Description, Name: us.Name,
 	 AccountId: accountId}
-fmt.Println(user)
-	res := storage.db.Omit(clause.Associations).Create(&user)
+
+	res := storage.db.Omit("AccessKeys").Create(&user)
 
 	if res.Error != nil {
 		return nil, res.Error

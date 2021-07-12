@@ -40,7 +40,8 @@ const (
 )
 
 const (
-	US_EAST_1 Region = "us-east-1"
+	REGION_NONE Region = ""
+	US_EAST_1  = "us-east-1"
 )
 
 type Statement struct {
