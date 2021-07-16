@@ -30,6 +30,7 @@ func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest)
 		Name: req.GetName(),
 		Description: req.GetDescription(),
 		Arn: arn.String(),
+		Policies: req.GetPolices(),
 	 },req.GetPassword(),user.AccountId)
 
 	 if err !=nil  { 
@@ -47,29 +48,71 @@ func (s *IAMService) CreateUser(ctx context.Context, req *aws.CreateUserRequest)
 }
 
 func (s *IAMService) GetUser(ctx context.Context, req *aws.GetUserRequest) (*aws.GetUserResponse, error) {
-	_, err := s.storage.FindUser("")
+
+	us ,err := s.auth.GetUserMetadata(ctx)
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Internal error")
+	} 
+ 
+	id := req.GetId()
+	user , err := s.storage.FindUser("id = ? AND account_id = ?",id,us.AccountId)
+	
+	groupId := user.GroupID
+
+	fetchUser :=  &aws.User{
+		Id: uint32(user.ID),
+		Name: user.Name,
+		Description: user.Description,
+		Arn: user.Arn,
 	}
 
-	return &aws.GetUserResponse{}, nil
+	if groupId !=nil {
+		fetchUser.GroupId = uint32(*groupId)
+	}
+
+	return &aws.GetUserResponse{
+		User:fetchUser,
+	}, nil
 }
 
+
 func (s *IAMService) UpdateUser(ctx context.Context, req *aws.UpdateUserRequest) (*aws.UpdateUserResponse, error) {
-	updated, err := s.storage.UpdateUser(req.Updated)
+	us ,err := s.auth.GetUserMetadata(ctx)
+
+	if err !=nil { 
+		return nil, s.Error(err,codes.Unauthenticated, "Unauthenticated!")
+	}
+
+	updated, err := s.storage.UpdateUser(us.AccountId,req.Updated)
+
 	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
+		return nil, status.Error(codes.Internal, "Couldn't update user.")
 	}
 
 	return &aws.UpdateUserResponse{
-		Result: updated,
+		Result: &aws.User{
+			Id: uint32(updated.ID),
+			Name: updated.Name,
+			Description: updated.Description,
+			Arn: updated.Arn,
+			GroupId: uint32(*updated.GroupID),
+		},
 	}, nil
 }
 
 func (s *IAMService) DeleteUser(ctx context.Context, req *aws.DeleteUserRequest) (*emptypb.Empty, error) {
-	err := s.storage.DeleteUser(req.Id)
-	if err != nil {
-		return nil, status.Error(codes.Internal, "Internal error")
+
+	us ,err := s.auth.GetUserMetadata(ctx)
+
+	if err !=nil { 
+		return nil, s.Error(err,codes.Unauthenticated, "Unauthenticated!")
 	}
+
+
+	err = s.storage.DeleteUser(req.Id,us.AccountId)
+	if err != nil {
+		return nil, s.Error(err,codes.FailedPrecondition, "Unable to delete user.")
+	}
+
 	return &emptypb.Empty{}, nil
 }
