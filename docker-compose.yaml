@@ -20,8 +20,6 @@ services:
       ./env/sqs.env
     volumes: 
         - .:/app
-    environment: 
-      SERVICE: sqs
     depends_on: 
       - sqs-db
   iam:
@@ -33,8 +31,6 @@ services:
       ./env/iam.env
     volumes: 
         - .:/app
-    environment: 
-      SERVICE: iam
     depends_on: 
       - iam-db
     

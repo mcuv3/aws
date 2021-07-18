@@ -183,7 +183,7 @@ message CreateUserRequest {
     string name = 1;
     string description = 2;
     string password = 3;
-    repeated PolicyCreation polices = 4;
+    repeated Policy polices = 4;
 }
 
 message CreateUserResponse {

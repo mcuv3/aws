@@ -12,6 +12,7 @@ import (
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 )
@@ -34,13 +35,21 @@ var ctx = context.Background()
 
 type SQSServer struct {
 	aws.UnimplementedSQSServiceServer
+	auth *auth.AuthInterceptor 
  }
 
 
-func (*SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) (*aws.CreateQueueResponse,error){ 
-	queue := req.Queue;
+func (s *SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) (*aws.CreateQueueResponse,error){ 
+	queueName := req.GetName();
 
-	fmt.Println(queue)
+	fmt.Println(queueName)
+	us ,err := s.auth.GetUserMetadata(ctx)
+
+	if err !=nil { 
+		return nil,grpc.Errorf(codes.Unauthenticated,"Unable to authenticate")
+	}
+
+	fmt.Println(us)
 
 
 	// if res := db.First(&user, "account_id = ?", accountId); res.Error != nil {
@@ -68,7 +77,8 @@ func (*SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) 
 	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Couldn't create queue."})
 	// }
 
-	return &aws.CreateQueueResponse{Queue: queue},nil
+	// return &aws.CreateQueueResponse{Queue: queue},nil
+	return &aws.CreateQueueResponse{Queue: &aws.Queue{Id: "1",Name: queueName}},nil
 }
 
 func (*SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest)(*aws.SendMessageResponse,error){ 
@@ -89,6 +99,7 @@ func authConfig() *auth.AuthInterceptor {
 	 return auth.NewAuthInterceptor(m,"sqs")
 }
 
+// TODO: migrate from rest api to gRPC
 func Run(l zerolog.Logger) error {
 
 
@@ -116,11 +127,16 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
 
-	iamInterceptor := authConfig()
+	authManager := auth.NewAuthInterceptor(
+		auth.NewJWTMannager("supersecret",time.Hour),
+		"iam",
+	)
  
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(iamInterceptor.Unary()))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authManager.Unary()))
 
-	aws.RegisterSQSServiceServer(s,&SQSServer{})
+	aws.RegisterSQSServiceServer(s,&SQSServer{
+		auth: authManager,
+	})
 	
 	reflection.Register(s)
 	

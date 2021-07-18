@@ -87,16 +87,22 @@ func (s *IAMService) UpdateUser(ctx context.Context, req *aws.UpdateUserRequest)
 
 	if err != nil {
 		return nil, status.Error(codes.Internal, "Couldn't update user.")
+	} 
+
+	updatedUser :=  &aws.User{
+		Id: uint32(updated.ID),
+		Name: updated.Name, 
+		Description: updated.Description,
+		Arn: updated.Arn,
+	}
+
+
+	if updated.GroupID !=nil {
+		updatedUser.GroupId = uint32(*updated.GroupID)
 	}
 
 	return &aws.UpdateUserResponse{
-		Result: &aws.User{
-			Id: uint32(updated.ID),
-			Name: updated.Name,
-			Description: updated.Description,
-			Arn: updated.Arn,
-			GroupId: uint32(*updated.GroupID),
-		},
+		Result: updatedUser,
 	}, nil
 }
 

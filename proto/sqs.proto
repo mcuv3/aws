@@ -9,18 +9,17 @@ option go_package = "./;aws";
 message Message {
     string Id = 1;
     string message = 2;
+    Queue queue = 3;
 }
-// import "google/api/annotations.proto";
 
 message Queue { 
     string Id = 1;
     string name = 2;
-    string account_id = 3;
 }
 
 
 message CreateQueueRequest { 
-    Queue queue = 1;
+    string name = 1;
 }
 
 message CreateQueueResponse { 
@@ -28,15 +27,16 @@ message CreateQueueResponse {
 }
 
 message SendMessageRequest {
-    Message message = 1;
+    string queue_name = 1;
+    string message = 2;
 }
 
 message SendMessageResponse {
-    string message = 1;
+    Message message = 1;
 }   
 
 message ReceiveMessageRequest {
-    Queue queue = 1;
+    string queue_name = 1;
 }
 
 message ReceiveMessageResponse {

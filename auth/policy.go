@@ -58,6 +58,8 @@ type ResourcePolicy struct {
 }
 
 
+// TODO: logic to validate and create policies easier.
+
 func ParsePolicy(p string) (*ResourcePolicy, error) {
 	policy := ResourcePolicy{}
 	err := json.Unmarshal([]byte(p), &policy)
@@ -83,10 +85,6 @@ func (r *ResourcePolicy) CheckPermission(action Action, resources ...Arn) bool {
 
 	return isAllowed
 }
-
-
-
-
 
 
 

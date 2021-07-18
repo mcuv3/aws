@@ -57,10 +57,9 @@ type User struct {
 }
 
 type AccessKey struct {
-	gorm.Model
+	AccessKeyId string `gorm:"primaryKey"`
 	Arn         string
 	CreatedAt   time.Time
-	AccessKeyId string
 	UserID   uint
 }
 
