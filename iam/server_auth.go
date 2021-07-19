@@ -16,7 +16,7 @@ func (s *IAMService) RootUserLogin(ctx context.Context, req *aws.RootUserLoginRe
 	email := req.GetEmail()
 	password := req.GetPassword()
 
-	us, err := s.storage.FindAwsUser("email = ?", email)
+	us, err := s.storage.FindRootUser("email = ?", email)
 
 	if err != nil {
 		return nil, s.Error(err, codes.Internal, "Unable to find user")
@@ -71,7 +71,7 @@ func (s *IAMService) SignUp(ctx context.Context, req *aws.SignUpRequest) (*aws.S
 	pass := req.GetPassword()
 	passConfirm := req.GetConfirmPassword()
 
-	user, err := s.storage.CreateAwsUser(email, pass, passConfirm)
+	user, err := s.storage.CreateRootUser(email, pass, passConfirm)
 
 	if err != nil {
 		s.logger.Err(err).AnErr("Aws-User", err).Msg("Error createing an aws root user.")

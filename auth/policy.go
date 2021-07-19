@@ -6,11 +6,14 @@ import (
 )
 
 // type Arn  = string this is an alias
-type Arn string // this is a new type
 
 type Effect string
 
 type Action string
+
+type Service string 
+
+type Region string
 
 const (
 	Allow = "Allow"
@@ -19,6 +22,26 @@ const (
 
 var (
 	Services = []string{"iam", "sqs", "lambda", "ses"}
+	GlobalServices = []string{"s3","cloudfront","organization"}
+)
+
+var (
+	Svs = map[Service]string{
+		IAM:"iam",
+	}
+)
+
+const (
+	IAM Service = "iam"
+	SQS 		= "sqs"
+	Lambda		= "lambda"
+	SES			= "ses"
+	CloudFront  = "cloudfront"
+)
+
+const (
+	REGION_NONE Region = ""
+	US_EAST_1  = "us-east-1"
 )
 
 type Statement struct {
@@ -33,6 +56,9 @@ type ResourcePolicy struct {
 	Version    string      `json:"version"`
 	Statements []Statement `json:"statement"`
 }
+
+
+// TODO: logic to validate and create policies easier.
 
 func ParsePolicy(p string) (*ResourcePolicy, error) {
 	policy := ResourcePolicy{}
@@ -60,30 +86,7 @@ func (r *ResourcePolicy) CheckPermission(action Action, resources ...Arn) bool {
 	return isAllowed
 }
 
-func (a Arn) GetService() []string {
-	parts := strings.Split(string(a), ":")
 
-	return parts
-}
-
-func in(arr []string, value string) bool {
-	isIn := false
-	for _, v := range arr {
-		isIn = v == value
-	}
-	return isIn
-}
-
-func (a Arn) Validate() bool {
-
-	parts := strings.Split(string(a), ":")
-
-	if len(a) == 1 && a == "*" {
-		return true
-	}
-
-	return len(parts) >= 6 && parts[0] == "arn" && parts[1] == "aws" && in(Services, parts[2])
-}
 
 func (a Action) Validate(service string, avaliableMethods []string) bool {
 	parts := strings.Split(string(a), ":")
@@ -92,6 +95,6 @@ func (a Action) Validate(service string, avaliableMethods []string) bool {
 		return false
 	}
 
-	return in(avaliableMethods, parts[1])
+	return inArr(avaliableMethods, parts[1])
 
 }

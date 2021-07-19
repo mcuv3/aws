@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
+	"reflect"
 	"time"
 
 	"github.com/form3tech-oss/jwt-go"
@@ -27,11 +29,19 @@ type RootClaims struct {
 	AccountId string
 }
 
+type UserMetadata struct { 
+	Email string
+	AccountId string
+}
+
+
+
 type AuthInterceptor struct {
 	Mannager      *JWTMannger
 	Issuer        string
 	Logger        zerolog.Logger
 	PublicMethods []string
+	ServerPrefix string
 }
 
 type JWTMannger struct {
@@ -45,6 +55,27 @@ func NewJWTMannager(SecretKey string, Duration time.Duration) *JWTMannger {
 
 func NewAuthInterceptor(mannager *JWTMannger, issuer string) *AuthInterceptor {
 	return &AuthInterceptor{Mannager: mannager, Issuer: issuer}
+}
+
+
+func (a *AuthInterceptor) GetUserMetadata(ctx context.Context) (*UserMetadata, error) {
+
+	md,ok:= metadata.FromIncomingContext(ctx)
+
+	if !ok { 
+		return nil,errors.New("Unable to get the context")
+	}
+
+	accountId :=  md["AccountId"]
+	email := md["Email"]
+
+
+	if len(accountId) == 0 || len(email) == 0 { 
+		return nil,errors.New("Incomplete user metadata.")
+	}
+	return &UserMetadata{Email: email[0],AccountId: accountId[0]},nil
+
+
 }
 
 func (a *AuthInterceptor) Validate(token string) (*UserClaims, error) {
@@ -118,13 +149,44 @@ func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 
 		var claims *UserClaims
 		var err error
+		skipAuth := false
 
-		if claims, err = a.Authorize(ctx, info.FullMethod); err != nil {
-			return nil, err
+
+		for _,method := range a.PublicMethods { 
+			if fmt.Sprintf("%s%s",a.ServerPrefix,method) == info.FullMethod {
+				skipAuth = true
+			}
 		}
 
-		ctxWithAuth := metadata.AppendToOutgoingContext(ctx, "AccountId", claims.AccountId, "Username", claims.Username)
+		if !skipAuth {
+			if claims, err = a.Authorize(ctx, info.FullMethod); err != nil {
+				return nil, err
+			}
+			ctxWithAuth := metadata.NewIncomingContext(ctx,metadata.MD{
+				"AccountId":[]string{ claims.AccountId},
+				"Email":[]string{ claims.Username},
+			}) 
+			return handler(ctxWithAuth, req)
+		} 
 
-		return handler(ctxWithAuth, req)
+		return handler(ctx,req)
+
+
 	}
+}
+
+
+func (u *UserMetadata) String() string { 
+	var(
+		v = &url.Values{
+			
+		}
+		s = reflect.ValueOf(*u)
+		t = reflect.TypeOf(*u)
+	)
+
+	for i := 0 ; i < s.NumField(); i++ { 
+		v.Add(t.Field(i).Name,fmt.Sprintf("%v",s.Field(i).Interface()))
+	}
+	return v.Encode()
 }

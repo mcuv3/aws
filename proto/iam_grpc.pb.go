@@ -7,6 +7,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -28,14 +29,14 @@ type IAMServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateUserResponse, error)
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*GetUserResponse, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*UpdateUserResponse, error)
-	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error)
+	DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	CreateGroup(ctx context.Context, in *CreateGroupRequest, opts ...grpc.CallOption) (*CreateGroupResponse, error)
 	GetGroup(ctx context.Context, in *GetGroupRequest, opts ...grpc.CallOption) (*GetGroupResponse, error)
 	UpdateGroup(ctx context.Context, in *UpdateGroupRequest, opts ...grpc.CallOption) (*UpdateGroupResponse, error)
 	DeleteGroup(ctx context.Context, in *DeleteGroupRequest, opts ...grpc.CallOption) (*DeleteGroupResponse, error)
-	CreateAccessKeys(ctx context.Context, in *CreateAccessKeysRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error)
+	CreateAccessKeys(ctx context.Context, in *CreateAccessKeyRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(ctx context.Context, in *GetAccessKeysRequest, opts ...grpc.CallOption) (*GetAccessKeysResponse, error)
-	DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*DeleteAccessKeysResponse, error)
+	DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	RootUserLogin(ctx context.Context, in *RootUserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
@@ -148,8 +149,8 @@ func (c *iAMServiceClient) UpdateUser(ctx context.Context, in *UpdateUserRequest
 	return out, nil
 }
 
-func (c *iAMServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*DeleteUserResponse, error) {
-	out := new(DeleteUserResponse)
+func (c *iAMServiceClient) DeleteUser(ctx context.Context, in *DeleteUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/iam.IAMService/DeleteUser", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -193,7 +194,7 @@ func (c *iAMServiceClient) DeleteGroup(ctx context.Context, in *DeleteGroupReque
 	return out, nil
 }
 
-func (c *iAMServiceClient) CreateAccessKeys(ctx context.Context, in *CreateAccessKeysRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error) {
+func (c *iAMServiceClient) CreateAccessKeys(ctx context.Context, in *CreateAccessKeyRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error) {
 	out := new(CreateAccessKeysResponse)
 	err := c.cc.Invoke(ctx, "/iam.IAMService/CreateAccessKeys", in, out, opts...)
 	if err != nil {
@@ -211,8 +212,8 @@ func (c *iAMServiceClient) GetAccessKeys(ctx context.Context, in *GetAccessKeysR
 	return out, nil
 }
 
-func (c *iAMServiceClient) DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*DeleteAccessKeysResponse, error) {
-	out := new(DeleteAccessKeysResponse)
+func (c *iAMServiceClient) DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/iam.IAMService/DeleteAccessKeys", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -262,14 +263,14 @@ type IAMServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateUserResponse, error)
 	GetUser(context.Context, *GetUserRequest) (*GetUserResponse, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error)
-	DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error)
+	DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error)
 	CreateGroup(context.Context, *CreateGroupRequest) (*CreateGroupResponse, error)
 	GetGroup(context.Context, *GetGroupRequest) (*GetGroupResponse, error)
 	UpdateGroup(context.Context, *UpdateGroupRequest) (*UpdateGroupResponse, error)
 	DeleteGroup(context.Context, *DeleteGroupRequest) (*DeleteGroupResponse, error)
-	CreateAccessKeys(context.Context, *CreateAccessKeysRequest) (*CreateAccessKeysResponse, error)
+	CreateAccessKeys(context.Context, *CreateAccessKeyRequest) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(context.Context, *GetAccessKeysRequest) (*GetAccessKeysResponse, error)
-	DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*DeleteAccessKeysResponse, error)
+	DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*emptypb.Empty, error)
 	UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error)
 	RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
@@ -313,7 +314,7 @@ func (UnimplementedIAMServiceServer) GetUser(context.Context, *GetUserRequest) (
 func (UnimplementedIAMServiceServer) UpdateUser(context.Context, *UpdateUserRequest) (*UpdateUserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateUser not implemented")
 }
-func (UnimplementedIAMServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*DeleteUserResponse, error) {
+func (UnimplementedIAMServiceServer) DeleteUser(context.Context, *DeleteUserRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteUser not implemented")
 }
 func (UnimplementedIAMServiceServer) CreateGroup(context.Context, *CreateGroupRequest) (*CreateGroupResponse, error) {
@@ -328,13 +329,13 @@ func (UnimplementedIAMServiceServer) UpdateGroup(context.Context, *UpdateGroupRe
 func (UnimplementedIAMServiceServer) DeleteGroup(context.Context, *DeleteGroupRequest) (*DeleteGroupResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteGroup not implemented")
 }
-func (UnimplementedIAMServiceServer) CreateAccessKeys(context.Context, *CreateAccessKeysRequest) (*CreateAccessKeysResponse, error) {
+func (UnimplementedIAMServiceServer) CreateAccessKeys(context.Context, *CreateAccessKeyRequest) (*CreateAccessKeysResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateAccessKeys not implemented")
 }
 func (UnimplementedIAMServiceServer) GetAccessKeys(context.Context, *GetAccessKeysRequest) (*GetAccessKeysResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAccessKeys not implemented")
 }
-func (UnimplementedIAMServiceServer) DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*DeleteAccessKeysResponse, error) {
+func (UnimplementedIAMServiceServer) DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteAccessKeys not implemented")
 }
 func (UnimplementedIAMServiceServer) UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error) {
@@ -648,7 +649,7 @@ func _IAMService_DeleteGroup_Handler(srv interface{}, ctx context.Context, dec f
 }
 
 func _IAMService_CreateAccessKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateAccessKeysRequest)
+	in := new(CreateAccessKeyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -660,7 +661,7 @@ func _IAMService_CreateAccessKeys_Handler(srv interface{}, ctx context.Context, 
 		FullMethod: "/iam.IAMService/CreateAccessKeys",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IAMServiceServer).CreateAccessKeys(ctx, req.(*CreateAccessKeysRequest))
+		return srv.(IAMServiceServer).CreateAccessKeys(ctx, req.(*CreateAccessKeyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

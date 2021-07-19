@@ -6,14 +6,13 @@ import (
 	"gorm.io/gorm"
 )
 
-type AwsUser struct {
-	gorm.Model
-	AccountId string `gorm:"foreignkey;unique"`
+type RootUser struct {
+	AccountId string `gorm:"primaryKey"`
 	Email     string
 	Password  string
 	Polices   []Policy  `gorm:"foreignkey:AccountId"`
-	Users     []UserIam `gorm:"foreignkey:AccountId"`
-	// Groups []Group `gorm:"foreignKey:AccountId"`
+	Users     []User `gorm:"foreignkey:AccountId"`
+	Groups    []Group `gorm:"foreignKey:AccountId"`
 }
 
 type Policy struct {
@@ -23,7 +22,7 @@ type Policy struct {
 	Description string
 	Manifest    string // the actual json policy
 	AccountId   string
-	Users       []*UserIam `gorm:"many2many:policy_user"`
+	Users       []*User `gorm:"many2many:policy_user"`
 	Roles       []*Role    `gorm:"many2many:policy_role"`
 }
 
@@ -41,35 +40,26 @@ type Group struct {
 	Arn         string
 	Name        string
 	Description string
-	Users       []UserIam `gorm:"foreignKey:GroupID"`
+	Users       []User `gorm:"foreignKey:GroupID"`
 	AccountId   string
 }
 
-type UserIam struct {
+type User struct {
 	gorm.Model
-	Name        string
+	Name        string 
 	Password    string
 	Arn         string
 	Description string
-	Polices     []*Policy   `gorm:"many2many:policy_user"`
-	AccessKeys  []AccessKey `gorm:"foreignKey:UserIamID"`
+	Polices     []Policy   `gorm:"many2many:policy_user"`
+	AccessKeys  []AccessKey `gorm:"foreignKey:UserID"`
 	AccountId   string
-	GroupID     uint
+	GroupID     *uint 
 }
 
 type AccessKey struct {
-	gorm.Model
+	AccessKeyId string `gorm:"primaryKey"`
 	Arn         string
 	CreatedAt   time.Time
-	AccessKeyId string
-	UserIamID   uint
+	UserID   uint
 }
 
-// func (u *UserIam) toPolicy() []*aws.Policy{
-
-// 	var ps  []*aws.Policy
-
-// 	for p,_:= range u.Policies {
-// 		ps = append(ps, &aws.Policy{})
-// 	}
-// }

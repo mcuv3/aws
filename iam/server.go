@@ -39,6 +39,8 @@ func Run(logger zerolog.Logger) error {
 	runMigrations(db)
 
 	authInt := auth.AuthInterceptor{Issuer: "iam", Logger: logger,
+	ServerPrefix: "/iam.IAMService/",
+	PublicMethods: []string{"RootUserLogin","SignUp","UserLogin"},
 		Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary()))
@@ -61,5 +63,5 @@ func (s *IAMService) Error(err error, code codes.Code, msg string) error {
 }
 
 func runMigrations(db *gorm.DB) {
-	db.AutoMigrate(model.AwsUser{}, model.AccessKey{}, model.Group{}, model.UserIam{}, model.Role{}, model.Policy{})
+	db.AutoMigrate(model.RootUser{}, model.Group{}, model.Role{}, model.Policy{},model.User{},model.AccessKey{})
 }

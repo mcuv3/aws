@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -20,17 +19,10 @@ var times = [3]string{"second", "minute", "hour"}
 
 type UserMessageId string;
 
-type User struct {
-	gorm.Model
-	AccountId string `gorm:"primaryKey"`
-	Queues    []Queue
-}
-
 type Queue struct {
 	gorm.Model
 	Name             string
-	Url              string `gorm:"unique"`
-	UserID           uint
+	Arn 			 string   		    `gorm:"not null"`
 	AccountId        string             `gorm:"primaryKey"`
 	Configuration    ConfigurationQueue `gorm:"embedded"`
 	messages         []Message
@@ -52,33 +44,6 @@ type ConfigurationQueue struct {
 	DeliveryDelay        int
 	DeliveryDelayTime    Time
 }
-
-type CreateQueueBody struct {
-	Configuration ConfigurationQueue
-	Name          string
-}
-
-
-type SendMessageBody struct { 
-	Id UserMessageId
-	Message string
-}
-
-type DeleteMessageBody struct { 
-	Ids []UserMessageId
-}
-
-func (u *User) JSON() string {
-	data, _ := json.Marshal(u)
-	return string(data)
-}
-
-
-type RetriveMessageBody struct { 
-	LongPooling int
-	BatchLimit int
-}
-
 
 
 func (m *Message) Key() string { 

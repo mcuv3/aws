@@ -26,14 +26,14 @@ func main() {
 
 
 	
-	svc := *service
+	svc := *service 
 
 	if svc == "" {
 		svc = os.Getenv("SERVICE")
 	} 
 
-	
 	l := logger()
+	l.Info().Str("svc",os.Getenv("SERVICE"))
 	
 		
 	switch(svc) {  
@@ -41,6 +41,7 @@ func main() {
 		if err := sqs.Run(l); err !=nil {
 			l.Fatal().Msg("Unable to start sqs service.")
 		}
+		break
 	case "iam":
 		if err := iam.Run(l); err !=nil {
 			l.Fatal().Msg("Unable to start iam service.")
