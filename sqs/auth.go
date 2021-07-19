@@ -10,7 +10,7 @@ func login(c *fiber.Ctx) error {
 
 	user := model.User{}
 
-	db.First(&user)
+	// db.First(&user)
 
 	token := jwt.New(jwt.SigningMethodHS256)
 

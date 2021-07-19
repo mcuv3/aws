@@ -13,13 +13,30 @@ message Message {
 }
 
 message Queue { 
-    string Id = 1;
     string name = 2;
+    string arn  = 3;
 }
+
+enum Time { 
+    SECOND = 0;
+    MINUTE = 1;
+    HOUR = 2;
+}
+
+message ConfigurationQueue {
+	int32 VisibilityTimeout     =  1;
+	Time VisibilityTime        =  2;
+	int32 MessageRetention      =  3;
+	Time MessageRetentionTime  =  4;
+	int32 DeliveryDelay         =  5;
+	Time DeliveryDelayTime     =  6;
+}
+
 
 
 message CreateQueueRequest { 
     string name = 1;
+    ConfigurationQueue conf = 2;
 }
 
 message CreateQueueResponse { 

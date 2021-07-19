@@ -17,12 +17,12 @@ func validateQueueOwner(c *fiber.Ctx,queue *model.Queue) error {
 		return fiber.NewError(401,"Not Authorized")
 	}
 
-	name := c.Params("queueName")
+	// name := c.Params("queueName")
 
 
-	if res := db.First(&queue, "account_id = ? AND name = ?", qAccountId, name); res.Error != nil {
-		return fiber.NewError(404,"Cannot find the queue")
-	}
+	// if res := db.First(&queue, "account_id = ? AND name = ?", qAccountId, name); res.Error != nil {
+	// 	return fiber.NewError(404,"Cannot find the queue")
+	// }
 
 	return nil
 

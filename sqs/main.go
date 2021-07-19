@@ -2,6 +2,7 @@ package sqs
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -25,60 +26,78 @@ type Product struct {
 
 var (
 	Secret string
-	db *gorm.DB
 )
 
 var ctx = context.Background()
 
-
+func (s *SQSServer) Error(err error, code codes.Code, msg string) error {
+	s.logger.Err(err)
+	return grpc.Errorf(code, msg)
+}
 
 
 type SQSServer struct {
 	aws.UnimplementedSQSServiceServer
 	auth *auth.AuthInterceptor 
+	logger zerolog.Logger
+	db *gorm.DB
  }
 
 
 func (s *SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) (*aws.CreateQueueResponse,error){ 
 	queueName := req.GetName();
 
-	fmt.Println(queueName)
 	us ,err := s.auth.GetUserMetadata(ctx)
 
 	if err !=nil { 
-		return nil,grpc.Errorf(codes.Unauthenticated,"Unable to authenticate")
+		return nil,s.Error(err,codes.Unauthenticated,"Unable to authenticate")
 	}
 
-	fmt.Println(us)
+ 
+	if res := s.db.Where("account_id = ? AND name =  ?", us.AccountId,queueName).First(&model.Queue{}); res.Error == nil  {
+		return nil,grpc.Errorf(codes.NotFound,"Something went wrong %s",queueName)
+	}
+
+	conf := req.GetConf()
+
+	
+	if string(conf.DeliveryDelayTime) == "" || string(conf.MessageRetentionTime) == "" || string(conf.VisibilityTime) == "" {
+		return nil,s.Error(errors.New("Invalid configuration"),codes.InvalidArgument,"Invalid configuration please check.")
+	}
 
 
-	// if res := db.First(&user, "account_id = ?", accountId); res.Error != nil {
-	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Cannot the user."})
-	// }
+	arn, err := auth.NewArn(auth.SQS,auth.US_EAST_1,us.AccountId,fmt.Sprintf("/queue/%s",queueName))
 
-	// fmt.Println(body.Configuration)
+	if err != nil {
+		return nil,s.Error(err,codes.InvalidArgument,"Invalid ARN")
+	}
 
-	// if body.Configuration.DeliveryDelayTime == "" || body.Configuration.MessageRetentionTime == "" || body.Configuration.VisibilityTime == "" {
-	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Invalid configuration please check."})
-	// }
 
-	// name := strings.ReplaceAll(body.Name, " ", "")
+	queue := model.Queue{
+		Name:          queueName, 
+		AccountId:     us.AccountId,
+		Arn: arn.String(),
+		Configuration: model.ConfigurationQueue{
+			MessageRetentionTime: conf.MessageRetentionTime.String(),
+			VisibilityTimeout: int(conf.VisibilityTimeout),
+			VisibilityTime: conf.VisibilityTime.String(),
+			MessageRetention: int(conf.MessageRetention),
+			DeliveryDelay: int(conf.DeliveryDelayTime),
+			DeliveryDelayTime: conf.DeliveryDelayTime.String(),
+		},
+	}
 
-	// queue := model.Queue{
-	// 	Url:           model.BaseUrl + "/" + user.AccountId + "/" + name,
-	// 	Configuration: body.Configuration,
-	// 	AccountId:     user.AccountId,
-	// 	Name:          name,
-	// }
 
-	// res := db.Create(&queue)
+	res := s.db.Create(&queue)
 
-	// if res.Error != nil {
-	// 	return c.Status(400).JSON(model.ErrorResponse{Status: 400, Message: "Couldn't create queue."})
-	// }
+	if res.Error != nil {
+		return nil,s.Error(res.Error,codes.Aborted,"Couldn't create queue.")
+	}
 
-	// return &aws.CreateQueueResponse{Queue: queue},nil
-	return &aws.CreateQueueResponse{Queue: &aws.Queue{Id: "1",Name: queueName}},nil
+	return &aws.CreateQueueResponse{Queue: &aws.Queue{
+		Name: queueName,
+		Arn: arn.String(),
+		}},nil
 }
 
 func (*SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest)(*aws.SendMessageResponse,error){ 
@@ -103,7 +122,7 @@ func authConfig() *auth.AuthInterceptor {
 func Run(l zerolog.Logger) error {
 
 
-	db,err :=database.New()
+	db,err := database.New()
 
 	if err !=nil {
 		err = fmt.Errorf("Failed to connect database: %w",err)
@@ -126,7 +145,7 @@ func Run(l zerolog.Logger) error {
 		l.Err(err).Str("listener",lis.Addr().String()).Msg("Unable to listen")
 		return err
 	}
-
+ 
 	authManager := auth.NewAuthInterceptor(
 		auth.NewJWTMannager("supersecret",time.Hour),
 		"iam",
@@ -136,6 +155,8 @@ func Run(l zerolog.Logger) error {
 
 	aws.RegisterSQSServiceServer(s,&SQSServer{
 		auth: authManager,
+		db: db,
+		logger: l,
 	})
 	
 	reflection.Register(s)
