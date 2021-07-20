@@ -9,7 +9,7 @@ option go_package = "./;aws";
 message Message {
     string Id = 1;
     string message = 2;
-    Queue queue = 3;
+    string queue_name = 3;
 }
 
 message Queue { 
@@ -54,6 +54,8 @@ message SendMessageResponse {
 
 message ReceiveMessageRequest {
     string queue_name = 1;
+    int32 batch_limit = 2;
+    int32 wait_limit = 3;
 }
 
 message ReceiveMessageResponse {
