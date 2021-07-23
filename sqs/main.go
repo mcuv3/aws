@@ -105,6 +105,7 @@ func (s *SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest
 
 	us ,err := s.auth.GetUserMetadata(ctx)
 
+
 	if err != nil {
 		return nil,s.Error(err,codes.Unauthenticated,"Unable to authenticate")
 	}
@@ -146,8 +147,9 @@ func (s *SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest
 }
 
 func (s *SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQSService_ReceiveMessageServer)error{ 
-	
-	us ,err := s.auth.GetUserMetadata(ctx)
+
+
+	us , err := s.auth.Authorize(stream.Context(),"")
 	
 	if err != nil {	
 		s.logger.Err(err).Str("error:",err.Error())
@@ -177,7 +179,7 @@ func (s *SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQS
  
 				// keys, err := redis.Keys(ctx, queue.Pattern()).Result()
 
-				 res := s.db.Where("queue_id = ?",queue.ID).Find(&m) 
+				 res := s.db.Where("queue_id = ?",queue.ID).First(&m) 
 
 				 if res.Error !=nil {
 					  errChan <- s.Error(res.Error,codes.NotFound,"Couldn't find the message")
@@ -246,15 +248,16 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
  
-	authManager := auth.NewAuthInterceptor(
-		auth.NewJWTMannager("supersecret",time.Hour),
-		"iam",
-	)
  
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authManager.Unary()))
+	authInterceptor := auth.AuthInterceptor{Issuer: "iam", Logger: l,
+	ServerPrefix: "/iam.SQSService/",
+	PublicMethods: []string{},
+		Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
+ 
+	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()),grpc.StreamInterceptor(authInterceptor.Stream()))
 
 	aws.RegisterSQSServiceServer(s,&SQSServer{
-		auth: authManager,
+		auth: &authInterceptor,
 		db: db,
 		logger: l,
 	})

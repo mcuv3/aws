@@ -58,16 +58,24 @@ func NewAuthInterceptor(mannager *JWTMannger, issuer string) *AuthInterceptor {
 }
 
 
+
+
 func (a *AuthInterceptor) GetUserMetadata(ctx context.Context) (*UserMetadata, error) {
 
 	md,ok:= metadata.FromIncomingContext(ctx)
+
+	fmt.Println("Get here",md)
 
 	if !ok { 
 		return nil,errors.New("Unable to get the context")
 	}
 
-	accountId :=  md["AccountId"]
-	email := md["Email"]
+	accountId,okAccount :=  md["AccountId"]
+	email,okEmail := md["Email"] 
+
+	if !okEmail || !okAccount {
+		return nil,errors.New("Incomplete metadata")
+	}
 
 
 	if len(accountId) == 0 || len(email) == 0 { 
@@ -173,6 +181,61 @@ func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 
 
 	}
+}
+
+func (a *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
+    return func(
+        srv interface{},
+        stream grpc.ServerStream,
+        info *grpc.StreamServerInfo,
+        handler grpc.StreamHandler,
+    ) error {
+
+		if info.IsServerStream {
+			return handler(srv, stream)
+		}
+
+
+		a.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
+
+		var claims *UserClaims
+		var err error
+		skipAuth := false
+
+
+		for _,method := range a.PublicMethods { 
+			if fmt.Sprintf("%s%s",a.ServerPrefix,method) == info.FullMethod {
+				skipAuth = true
+			}
+		}
+ 
+		if !skipAuth {
+			if claims, err = a.Authorize(stream.Context(), info.FullMethod); err != nil {
+				return  err
+			}
+
+			
+			stream.SetTrailer(metadata.MD{
+				"AccountId":[]string{claims.AccountId},
+				// "Email":[]string{claims.Username},
+			}) 
+			stream.SetHeader(metadata.MD{
+				"AccountId":[]string{claims.AccountId},
+				// "Email":[]string{claims.Username},
+			})
+		
+			metadata.AppendToOutgoingContext(stream.Context(),"TEST","TEST")
+	stream.Context()
+			// fmt.Println(claims)
+		} 
+
+		stream.SetHeader(metadata.MD{
+			"Something":[]string{"testin"},
+		})
+
+
+		return handler(srv,stream)
+    }
 }
 
 
