@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -16,6 +17,15 @@ const (
 )
 
 var times = [3]string{"second", "minute", "hour"}
+
+type MessageStatus int 
+
+const (
+	Available MessageStatus = iota 
+	Processing
+	Consumed
+)
+
 
 type UserMessageId string;
 
@@ -33,10 +43,12 @@ type Message struct {
 	gorm.Model
 	Message string
 	UserMessageId UserMessageId
+	Status MessageStatus `gorm:"default:0"`
+	DeleteOn time.Time
 	QueueID uint
 }
 
-type ConfigurationQueue struct {
+type ConfigurationQueue struct { 
 	VisibilityTimeout    int
 	VisibilityTime       Time
 	MessageRetention     int

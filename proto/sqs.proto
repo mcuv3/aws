@@ -62,6 +62,22 @@ message ReceiveMessageResponse {
     Message message = 1;
 }
 
+message DeleteMessageRequest {
+    string queue_name = 1;
+    string message_id = 2;
+}
+
+message DeleteResponse {
+    string message = 1;
+}
+
+
+message DeleteQueueRequest {
+    string queue_name = 1;
+}
+
+
+
 service SQSService {
     rpc CreateQueue(CreateQueueRequest) returns (CreateQueueResponse){
         // option (google.api.http) = {
@@ -80,4 +96,8 @@ service SQSService {
         //     get: "/v1/message"
         // };
     };
+
+    rpc DeleteMessage(DeleteMessageRequest) returns (DeleteResponse) {};
+
+    rpc DeleteQueue(DeleteQueueRequest) returns (DeleteResponse) {};
 }

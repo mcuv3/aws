@@ -249,7 +249,7 @@ func (c *iAMServiceClient) SignUp(ctx context.Context, in *SignUpRequest, opts .
 }
 
 // IAMServiceServer is the server API for IAMService service.
-// All implementations must embed UnimplementedIAMServiceServer
+// All implementations should embed UnimplementedIAMServiceServer
 // for forward compatibility
 type IAMServiceServer interface {
 	CreatePolicy(context.Context, *CreatePolicyRequest) (*CreatePolicyResponse, error)
@@ -274,10 +274,9 @@ type IAMServiceServer interface {
 	UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error)
 	RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
-	mustEmbedUnimplementedIAMServiceServer()
 }
 
-// UnimplementedIAMServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedIAMServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedIAMServiceServer struct {
 }
 
@@ -347,7 +346,6 @@ func (UnimplementedIAMServiceServer) RootUserLogin(context.Context, *RootUserLog
 func (UnimplementedIAMServiceServer) SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUp not implemented")
 }
-func (UnimplementedIAMServiceServer) mustEmbedUnimplementedIAMServiceServer() {}
 
 // UnsafeIAMServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to IAMServiceServer will

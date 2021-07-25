@@ -20,6 +20,8 @@ type SQSServiceClient interface {
 	CreateQueue(ctx context.Context, in *CreateQueueRequest, opts ...grpc.CallOption) (*CreateQueueResponse, error)
 	SendMessage(ctx context.Context, in *SendMessageRequest, opts ...grpc.CallOption) (*SendMessageResponse, error)
 	ReceiveMessage(ctx context.Context, in *ReceiveMessageRequest, opts ...grpc.CallOption) (SQSService_ReceiveMessageClient, error)
+	DeleteMessage(ctx context.Context, in *DeleteMessageRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	DeleteQueue(ctx context.Context, in *DeleteQueueRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
 }
 
 type sQSServiceClient struct {
@@ -80,17 +82,36 @@ func (x *sQSServiceReceiveMessageClient) Recv() (*ReceiveMessageResponse, error)
 	return m, nil
 }
 
+func (c *sQSServiceClient) DeleteMessage(ctx context.Context, in *DeleteMessageRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	out := new(DeleteResponse)
+	err := c.cc.Invoke(ctx, "/sqs.SQSService/DeleteMessage", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sQSServiceClient) DeleteQueue(ctx context.Context, in *DeleteQueueRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	out := new(DeleteResponse)
+	err := c.cc.Invoke(ctx, "/sqs.SQSService/DeleteQueue", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SQSServiceServer is the server API for SQSService service.
-// All implementations must embed UnimplementedSQSServiceServer
+// All implementations should embed UnimplementedSQSServiceServer
 // for forward compatibility
 type SQSServiceServer interface {
 	CreateQueue(context.Context, *CreateQueueRequest) (*CreateQueueResponse, error)
 	SendMessage(context.Context, *SendMessageRequest) (*SendMessageResponse, error)
 	ReceiveMessage(*ReceiveMessageRequest, SQSService_ReceiveMessageServer) error
-	mustEmbedUnimplementedSQSServiceServer()
+	DeleteMessage(context.Context, *DeleteMessageRequest) (*DeleteResponse, error)
+	DeleteQueue(context.Context, *DeleteQueueRequest) (*DeleteResponse, error)
 }
 
-// UnimplementedSQSServiceServer must be embedded to have forward compatible implementations.
+// UnimplementedSQSServiceServer should be embedded to have forward compatible implementations.
 type UnimplementedSQSServiceServer struct {
 }
 
@@ -103,7 +124,12 @@ func (UnimplementedSQSServiceServer) SendMessage(context.Context, *SendMessageRe
 func (UnimplementedSQSServiceServer) ReceiveMessage(*ReceiveMessageRequest, SQSService_ReceiveMessageServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReceiveMessage not implemented")
 }
-func (UnimplementedSQSServiceServer) mustEmbedUnimplementedSQSServiceServer() {}
+func (UnimplementedSQSServiceServer) DeleteMessage(context.Context, *DeleteMessageRequest) (*DeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteMessage not implemented")
+}
+func (UnimplementedSQSServiceServer) DeleteQueue(context.Context, *DeleteQueueRequest) (*DeleteResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteQueue not implemented")
+}
 
 // UnsafeSQSServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to SQSServiceServer will
@@ -173,6 +199,42 @@ func (x *sQSServiceReceiveMessageServer) Send(m *ReceiveMessageResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _SQSService_DeleteMessage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteMessageRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SQSServiceServer).DeleteMessage(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sqs.SQSService/DeleteMessage",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SQSServiceServer).DeleteMessage(ctx, req.(*DeleteMessageRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SQSService_DeleteQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteQueueRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SQSServiceServer).DeleteQueue(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/sqs.SQSService/DeleteQueue",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SQSServiceServer).DeleteQueue(ctx, req.(*DeleteQueueRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _SQSService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "sqs.SQSService",
 	HandlerType: (*SQSServiceServer)(nil),
@@ -184,6 +246,14 @@ var _SQSService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SendMessage",
 			Handler:    _SQSService_SendMessage_Handler,
+		},
+		{
+			MethodName: "DeleteMessage",
+			Handler:    _SQSService_DeleteMessage_Handler,
+		},
+		{
+			MethodName: "DeleteQueue",
+			Handler:    _SQSService_DeleteQueue_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
