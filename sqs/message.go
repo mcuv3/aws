@@ -35,6 +35,7 @@ func (s *SQSServer) SendMessage(ctx context.Context,req * aws.SendMessageRequest
 		Message: req.GetMessage(),
 		QueueID: queue.ID,
 		UserMessageId: model.UserMessageId(uuid.NewString()),
+		QueueName: queue.Name,
 	}
 
 	
@@ -82,35 +83,38 @@ func (s *SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQS
 	errChan := make(chan error)
 
 		go func() {
+			
+			var sent,wait int 
 
-			var n int
-			var sent int 
-
-			for {
-				m := model.Message{}
+			process:for {
+				msgs := []*model.Message{}
  
 				// keys, err := redis.Keys(ctx, queue.Pattern()).Result()
 
-				 res := s.db.Where("queue_id = ? AND status = ?",queue.ID,model.Available).First(&m) 
+				 res := s.db.Where("queue_id = ? AND status = ?",queue.ID,model.Available).Find(&msgs) 
 
-				 if res.Error !=nil && res.Error.Error() != "record not found" {
+				 if res.Error !=nil {
 					  errChan <- s.Error(res.Error,codes.NotFound,"Something went wrong getting the messages.")
-				} else if  res.Error == nil {
-					err := stream.SendMsg( &aws.ReceiveMessageResponse{Message: 
+				} 
+				
+				for _,m := range msgs {
+
+					if sent == int(req.GetBatchLimit()) { break process }
+
+					err := stream.SendMsg(&aws.ReceiveMessageResponse{Message: 
 						&aws.Message{Id:  string(m.UserMessageId), Message: m.Message, QueueName: queue.Name}})
-	
-					if err !=nil {
-						errChan <- err
+						
+						if err !=nil {
+							errChan <- err
 					}
-					sent++
-	
 					m.Status = model.Processing
 					m.DeleteOn = time.Now().Add(time.Duration(queue.Configuration.VisibilityTimeout) * time.Second)
-	
-					 if err := s.db.Save(&m).Error; err !=nil {
+					if err := s.db.Save(&m).Error; err !=nil {
 						errChan <- err 
-					 }
+					}
+					sent++
 				}
+					
 
 				// if err == nil {
 				// 	for _, k := range keys {
@@ -121,14 +125,13 @@ func (s *SQSServer) ReceiveMessage(req *aws.ReceiveMessageRequest,stream aws.SQS
 				// 		messages = append(messages, m)
 				// 	}
 				// }
-				time.Sleep(time.Second); n++;
-				if int(req.GetBatchLimit()) == sent || int(req.GetWaitLimit()) <= n {
-					break
-				}
+				time.Sleep(time.Second);
+				
+				if wait++; int(req.GetWaitLimit()) <= wait { break process }
 
 			}
 
-			errChan <- nil
+			errChan <- nil 
 		}()
 		
 	return <- errChan
@@ -142,6 +145,7 @@ func (s *SQSServer) DeleteMessage(ctx context.Context,req *aws.DeleteMessageRequ
 
 	msg := model.Message{}
 
+	
 	res := s.db.Where("queue_name = ? AND user_message_id = ?",queueName,id).First(&msg)
 
 	if res.Error != nil{
@@ -152,7 +156,7 @@ func (s *SQSServer) DeleteMessage(ctx context.Context,req *aws.DeleteMessageRequ
 		return &aws.DeleteResponse{Message: "Unable to delete, message is available or already consumed."},nil
 	}
 
-	if msg.DeleteOn.After(time.Now()) {
+	if time.Now().After(msg.DeleteOn) {
 		msg.Status = model.Available
 		s.db.Save(&msg)
 		return &aws.DeleteResponse{Message: "Time to process expired,available on the queue again."},nil

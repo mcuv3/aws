@@ -43,6 +43,7 @@ type Message struct {
 	gorm.Model
 	Message string
 	UserMessageId UserMessageId
+	QueueName string
 	Status MessageStatus `gorm:"default:0"`
 	DeleteOn time.Time
 	QueueID uint
