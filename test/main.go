@@ -1,35 +1,62 @@
 package main
 
 import (
-	"fmt"
-	"sync"
-	"time"
+	"archive/tar"
+	"bytes"
+	"context"
+	"io"
+	"log"
+	"os"
+
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 )
 
 func main() {
-	PolicyTest()
-	// done := make(chan struct{})
+    ctx := context.Background()
+    cli, err := client.NewEnvClient()
+    if err != nil {
+        log.Fatal(err, " :unable to init client")
+    }
 
-	// go func (){
-	// 	time.Sleep(time.Second*3)
-	// 	done <- struct{}{}
-	// }()
+    buf := new(bytes.Buffer)
+    tw := tar.NewWriter(buf)
+    defer tw.Close()
 
-	// <- done
-	// fmt.Println("Waiting effect")
-}
+    dockerF :=[]byte(`
+	FROM node
+	RUN echo "(()=>{console.log('HelloWorld')})()" > node.js
+	CMD ["node", "node.js"]
+	`)
 
-func withWaitGroup() {
-	var wg sync.WaitGroup
+    tarHeader := &tar.Header{
+        Name: "Dockerfile",
+        Size: int64(len(dockerF)),
+    }
+    err = tw.WriteHeader(tarHeader)
+    if err != nil {
+        log.Fatal(err, " :unable to write tar header")
+    }
+    _, err = tw.Write(dockerF)
+    if err != nil {
+        log.Fatal(err, " :unable to write tar body")
+    }
+    dockerFileTarReader := bytes.NewReader(buf.Bytes())
 
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(time.Second * 5)
-	}()
-
-	wg.Wait()
-	fmt.Println("Waiting all wait groups")
-
+    imageBuildResponse, err := cli.ImageBuild(
+        ctx,
+        dockerFileTarReader,
+        types.ImageBuildOptions{
+            Context:    dockerFileTarReader,
+            Dockerfile: "Dockerfile",
+			Tags: []string{"test"},
+            Remove:     false})
+    if err != nil {
+        log.Fatal(err, " :unable to build docker image")
+    }
+    defer imageBuildResponse.Body.Close()
+    _, err = io.Copy(os.Stdout, imageBuildResponse.Body)
+    if err != nil {
+        log.Fatal(err, " :unable to read image build response")
+    }
 }

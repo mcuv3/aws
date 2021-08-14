@@ -34,6 +34,18 @@ services:
     depends_on: 
       - iam-db
     
+  lambda:
+    build: .
+    container_name: lambda
+    ports: 
+        - "6003:50051"
+    env_file: 
+      ./env/lambda.env
+    volumes: 
+        - .:/app
+    depends_on: 
+      - lambda-db
+    
   cache:
     image: redis
     ports: 
@@ -63,7 +75,14 @@ services:
     volumes: 
       - iam-data:/var/lib/postgresql/data
 
+  lambda-db:
+    <<: *defaults-db
+    container_name: lambda-db
+    volumes: 
+      - lambda-data:/var/lib/postgresql/data
+
 volumes: 
   sqs-data:
   iam-data:
+  lambda-data:
 

@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/MauricioAntonioMartinez/aws/iam"
+	"github.com/MauricioAntonioMartinez/aws/lambda"
 	"github.com/MauricioAntonioMartinez/aws/sqs"
 
 	// "github.com/qinains/fastergoding"
@@ -45,6 +46,10 @@ func main() {
 	case "iam":
 		if err := iam.Run(l); err !=nil {
 			l.Fatal().Msg("Unable to start iam service.")
+		}
+	case "lambda":
+		if err := lambda.Run(l); err !=nil {
+			l.Fatal().Msg("Unable to start lambda service.")
 		}
 	}
 }
