@@ -57,7 +57,9 @@ func m() {
 		panic(err)
 	}
 
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{
+		
+	}); err != nil {
 		panic(err)
 	}
 

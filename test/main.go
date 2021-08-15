@@ -7,10 +7,44 @@ import (
 	"io"
 	"log"
 	"os"
+	"time"
 
+	"github.com/MauricioAntonioMartinez/aws/docker"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 )
+
+func d() {
+   
+    dis := docker.NewContainerDispatcher(3,&docker.DockerRuntime{})
+
+    dis.Start()
+
+
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+    dis.BuildImage(docker.BuildImageOptions{})
+
+    time.Sleep(time.Second * 15)
+
+}
 
 func main() {
     ctx := context.Background()

@@ -1,5 +1,7 @@
 package docker
 
+import "github.com/MauricioAntonioMartinez/aws/model"
+
 
 
 type ContainerConf struct {
@@ -12,12 +14,10 @@ type BuildImageOptions struct {
 	CPUSetMems     string
 	CPUShares      int64
 	CPUQuota       int64
-	CPUPeriod      int64
 	Memory         int64
-	CgroupParent   string
-	NetworkMode    string
-	ShmSize        int64
-	Dockerfile     string
+	ImageName 	   string
+	Code 		   string
+	Language	   model.Language
 }
 
 
@@ -35,10 +35,9 @@ type RunContainerOptions struct {              // Domainname
 
 
 type ContainerRuntime interface {
-	BuildImage(code string,imageName string,runtime string,options BuildImageOptions) error
+	BuildImage(options BuildImageOptions) error
 	PullImage(imageName string) error 
 	RunContainer(options RunContainerOptions) error
 	RemoveImage(imageName string) error
 }
 
-type DockerRuntime struct{}

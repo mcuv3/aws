@@ -8,3 +8,4 @@ type ErrorResponse struct {
 type SuccessResponse struct {
 	Message string
 }
+ 

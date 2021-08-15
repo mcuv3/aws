@@ -7,6 +7,7 @@ import (
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/docker"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -14,11 +15,13 @@ import (
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 )
-
+ 
 type LambdaServer struct {
 	auth *auth.AuthInterceptor
 	logger zerolog.Logger
+	docker *docker.ContainerDispatcher
 	db *gorm.DB
+	region string
 }
 
 
@@ -42,7 +45,7 @@ func Run(l zerolog.Logger) error {
 	if err !=nil {
 		l.Err(err).Str("listener",lis.Addr().String()).Msg("Failed to listen")
 		return err
-	}
+	} 
 
 	authInterceptor := auth.AuthInterceptor{Issuer: "lambda",Logger: l,
 	ServerPrefix: "/lambda.LambdaService/",
@@ -51,11 +54,16 @@ func Run(l zerolog.Logger) error {
 	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()),grpc.StreamInterceptor(authInterceptor.Stream()))
 
 
+	d := docker.NewContainerDispatcher(3,&docker.DockerRuntime{})
+	d.Start()
+	
 
 	aws.RegisterLambdaServiceServer(s,&LambdaServer{
 		auth: &authInterceptor,
 		logger: l,
 		db: db,
+		docker: d,
+		region: "us-east-1",
 	})
 
 	reflection.Register(s)
