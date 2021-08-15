@@ -52,13 +52,18 @@ func m() {
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageName,
-	}, nil, nil, nil, "testing")
+		
+	}, &container.HostConfig{
+		Resources: container.Resources{
+			Memory: 256 * 1024 * 1024,
+		},
+	}, nil, nil, "testing")
 	if err != nil {
 		panic(err)
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{
-		
+			
 	}); err != nil {
 		panic(err)
 	}

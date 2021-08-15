@@ -24,6 +24,9 @@ type LambdaServer struct {
 	region string
 }
 
+var region string
+
+
 
 func Run(l zerolog.Logger) error {
 
@@ -57,6 +60,7 @@ func Run(l zerolog.Logger) error {
 	d := docker.NewContainerDispatcher(3,&docker.DockerRuntime{})
 	d.Start()
 	
+	region = "us-east-1"
 
 	aws.RegisterLambdaServiceServer(s,&LambdaServer{
 		auth: &authInterceptor,

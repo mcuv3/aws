@@ -16,6 +16,8 @@ type BuildImageOptions struct {
 	CPUQuota       int64
 	Memory         int64
 	ImageName 	   string
+	BaseImage	   string
+	DockerFile 	   string
 	Code 		   string
 	Language	   model.Language
 }
@@ -29,6 +31,7 @@ type RunContainerOptions struct {              // Domainname
 	//	Healthcheck     *HealthConfig       `json:",omitempty"` // Healthcheck describes how to check the container is healthy
 		ArgsEscaped     bool                `json:",omitempty"` // True if command is already escaped (meaning treat as a command line) (Windows specific).
 		Image           string              // Name of the image as it was passed by the operator (e.g. could be symbolic)
+		Data	        string
 		Volumes         map[string]struct{} // List of volumes (mounts) used for the container
 		Labels          map[string]string   // List of labels set to this container
 }

@@ -32,13 +32,7 @@ func (d *DockerRuntime) BuildImage(options BuildImageOptions) error {
     tw := tar.NewWriter(buf)
     defer tw.Close() 
 
-    lang := options.Language
-
-    dockerF :=[]byte(fmt.Sprintf(`
-	FROM %s:%s
-	RUN echo "%s" > code%s
-	CMD ["%s", "code%s"]
-	`,lang.Name,lang.Runtimes[0],options.Code,lang.Extension,lang.Activator,lang.Extension))
+    dockerF :=[]byte(options.DockerFile)
 
     tarHeader := &tar.Header{
         Name: "Dockerfile",
@@ -66,6 +60,8 @@ func (d *DockerRuntime) BuildImage(options BuildImageOptions) error {
         log.Fatal(err, " :unable to build docker image ",options.ImageName)
     }
     defer imageBuildResponse.Body.Close()
+
+    // should be placed on a cloudwatch service
     _, err = io.Copy(os.Stdout, imageBuildResponse.Body)
     if err != nil {
         log.Fatal(err, " :unable to read image build response")
@@ -78,9 +74,12 @@ func (d *DockerRuntime) PullImage(imageName string) error {
 	fmt.Println("Image Pull")
 	return nil
 } 
+
 func (d *DockerRuntime) RunContainer(options RunContainerOptions) error {
 	time.Sleep(time.Second * 2)
 	fmt.Println("Run Container")
+    // Run a container based on the image of the user
+    // Call this one
 	return nil
 }
 func (d *DockerRuntime) RemoveImage(imageName string) error {

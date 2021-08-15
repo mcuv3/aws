@@ -7,6 +7,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -19,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion7
 type LambdaServiceClient interface {
 	CreateFunction(ctx context.Context, in *CreateFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	TestFunction(ctx context.Context, in *TestFunctionResquest, opts ...grpc.CallOption) (*LambdaResponse, error)
+	InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
+	SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error)
 }
 
 type lambdaServiceClient struct {
@@ -47,12 +50,32 @@ func (c *lambdaServiceClient) TestFunction(ctx context.Context, in *TestFunction
 	return out, nil
 }
 
+func (c *lambdaServiceClient) InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error) {
+	out := new(LambdaResponse)
+	err := c.cc.Invoke(ctx, "/lambda.LambdaService/InvoqueFunction", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *lambdaServiceClient) SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error) {
+	out := new(LambdaResponse)
+	err := c.cc.Invoke(ctx, "/lambda.LambdaService/SeedLambdaServer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LambdaServiceServer is the server API for LambdaService service.
 // All implementations should embed UnimplementedLambdaServiceServer
 // for forward compatibility
 type LambdaServiceServer interface {
 	CreateFunction(context.Context, *CreateFunctionRequest) (*LambdaResponse, error)
 	TestFunction(context.Context, *TestFunctionResquest) (*LambdaResponse, error)
+	InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error)
+	SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error)
 }
 
 // UnimplementedLambdaServiceServer should be embedded to have forward compatible implementations.
@@ -64,6 +87,12 @@ func (UnimplementedLambdaServiceServer) CreateFunction(context.Context, *CreateF
 }
 func (UnimplementedLambdaServiceServer) TestFunction(context.Context, *TestFunctionResquest) (*LambdaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestFunction not implemented")
+}
+func (UnimplementedLambdaServiceServer) InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InvoqueFunction not implemented")
+}
+func (UnimplementedLambdaServiceServer) SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SeedLambdaServer not implemented")
 }
 
 // UnsafeLambdaServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -113,6 +142,42 @@ func _LambdaService_TestFunction_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LambdaService_InvoqueFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(InvoqueFunctionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LambdaServiceServer).InvoqueFunction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lambda.LambdaService/InvoqueFunction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LambdaServiceServer).InvoqueFunction(ctx, req.(*InvoqueFunctionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _LambdaService_SeedLambdaServer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LambdaServiceServer).SeedLambdaServer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lambda.LambdaService/SeedLambdaServer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LambdaServiceServer).SeedLambdaServer(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LambdaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lambda.LambdaService",
 	HandlerType: (*LambdaServiceServer)(nil),
@@ -124,6 +189,14 @@ var _LambdaService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TestFunction",
 			Handler:    _LambdaService_TestFunction_Handler,
+		},
+		{
+			MethodName: "InvoqueFunction",
+			Handler:    _LambdaService_InvoqueFunction_Handler,
+		},
+		{
+			MethodName: "SeedLambdaServer",
+			Handler:    _LambdaService_SeedLambdaServer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

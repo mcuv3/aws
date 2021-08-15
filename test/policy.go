@@ -2,7 +2,9 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
+	"strconv"
 )
 
 func PolicyTest() {
@@ -30,4 +32,20 @@ func PolicyTest() {
 	// 	fmt.Println(p)
 	// }
 
+}
+
+
+
+func getTarget(n,p int) int  {
+    s := strconv.Itoa(n)
+    var total float64
+    factor := float64(p)
+  
+    for _,d := range s {
+      num,_ := strconv.Atoi(string(d))
+      total+= math.Pow(float64(num),factor)
+      factor++
+    }
+  
+  return int(total)
 }
