@@ -64,7 +64,6 @@ func (a *AuthInterceptor) GetUserMetadata(ctx context.Context) (*UserMetadata, e
 
 	md,ok:= metadata.FromIncomingContext(ctx)
 
-	fmt.Println("Get here",md)
 
 	if !ok { 
 		return nil,errors.New("Unable to get the context")

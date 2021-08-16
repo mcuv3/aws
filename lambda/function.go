@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/docker"
@@ -17,56 +16,43 @@ import (
 
 func (l *LambdaServer) CreateFunction(ctx context.Context,req *aws.CreateFunctionRequest) (*aws.LambdaResponse,error) {
 	us,err := l.auth.GetUserMetadata(ctx)
-
 	if err !=nil {
 		return nil,grpc.Errorf(codes.Unauthenticated,"Unable to authenticate in lambda.")
 	}
 
 	image := l.region + "/" + us.AccountId + "-" + req.GetName()
-
-	lang,ok := model.AllowedLanguages[req.GetLanguage()]
-
-	if !ok {
-		return nil,grpc.Errorf(codes.InvalidArgument,"Language not available")
-	}
-
 	runtime := model.Runtime{}
 
-	tx := l.db.Where("runtime_name = ?",req.GetRuntime()).First(&runtime)
-
+	tx := l.db.Where("name = ?",req.GetRuntime().String()).First(&runtime)
 	if tx.Error !=nil {
 		return nil,grpc.Errorf(codes.Internal,"Unable to find runtime")
-	}
-
-
+	} 
+ 
 	function := model.Function{
 		Name: req.GetName(),
-		Language: req.GetLanguage(),
-		RuntimeID: runtime.ID,
+		RuntimeID: runtime.ID, 
 		Code: req.GetCode(),
 		Image: image,
 		AccountId: us.AccountId,
 	}
 	
 	tx =  l.db.Create(&function)
-	
 	if tx.Error != nil {
 		return nil,grpc.Errorf(codes.Internal,"Error creating function.")
 	}
 
-	dockerFile := fmt.Sprintf(`
-	FROM %s
-	RUN echo "%s" > code.%s
-	CMD ["%s", "code.%s"]
-	`,runtime.Image,req.GetCode(),runtime.Extension,runtime.Activator,runtime.Extension)
+	// dockerFile := fmt.Sprintf(`
+	// FROM %s
+	// RUN echo "%s" > code.%s
+	// CMD ["%s", "runtime.%s"]
+	// `,runtime.Image,req.GetCode(),runtime.Extension,runtime.Activator,runtime.Extension)
 	
-	l.docker.BuildImage(docker.BuildImageOptions{
-		ImageName: image,
-		BaseImage: runtime.Image,
-		Code: req.GetCode(),
-		DockerFile: dockerFile,
-		Language: lang,
-	})
+	// l.docker.BuildImage(docker.BuildImageOptions{ 
+	// 	ImageName: image,
+	// 	BaseImage: runtime.Image,
+	// 	Code: req.GetCode(),
+	// 	DockerFile: dockerFile,
+	// })
 
 	return &aws.LambdaResponse{Message: "Successfully function created",Ok: true},nil
 }

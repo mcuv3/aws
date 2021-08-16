@@ -10,13 +10,17 @@ package lambda;
 option go_package = "./;aws";
 
 
+enum Runtime {
+    nodejs14 = 0;
+    python3 = 1;
+    golang = 2;
+} 
+
 message CreateFunctionRequest {
     string name = 1;
-    string language = 2;
-    string runtime = 3;
-    int32 ram = 4;
-    string cpu = 5;
-    string code  = 6;
+    Runtime runtime = 2;
+    int32 ram = 3;
+    string code  = 4;
 }
 
 message LambdaResponse {

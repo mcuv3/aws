@@ -22,8 +22,8 @@ type Runtime struct {
 
 var (
 	runtimes  = []Runtime{
-		{Image: fmt.Sprintf("%s/node:%s",region,"14"), Name: "Nodejs 14.x", Version: "1",Extension: "js",Activator: "node" },
-		{Image: fmt.Sprintf("%s/python:%s",region,"3.8"), Name: "Python 3.8", Version: "1",Extension: "py",Activator: "python"},
+		{Image: fmt.Sprintf("%s/node:%s",region,"14"), Name: "nodejs14", Version: "1",Extension: "js",Activator: "node" },
+		{Image: fmt.Sprintf("%s/python:%s",region,"3.8"), Name: "python3", Version: "1",Extension: "py",Activator: "python"},
 	}
 )
 
@@ -33,13 +33,16 @@ func (l *LambdaServer) SeedLambdaServer(ctx context.Context,in *emptypb.Empty) (
 
 	rnts := []model.Runtime{}
 	for _,runtime := range runtimes {
-		rnts = append(rnts, model.Runtime{Image: runtime.Image, Name: runtime.Name, Version: runtime.Version})
+		rnts = append(rnts, model.Runtime{
+			Image: runtime.Image, Name: runtime.Name, Version: runtime.Version,
+			Extension: runtime.Extension, Activator: runtime.Activator,
+		})
 	}
 
 	tx := l.db.CreateInBatches(rnts,len(runtimes))
 
 	if tx.Error !=nil {
-		return nil,grpc.Errorf(codes.Internal,"Couldn't seed the runtimes")
+		return nil,grpc.Errorf(codes.Internal,"Couldn't seed the routines")
 	}
 
 	return &aws.LambdaResponse{Message: "Sucessfully seeded the runtimes",Ok: true},nil

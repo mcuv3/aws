@@ -38,6 +38,7 @@ func Run(l zerolog.Logger) error {
 		return err
 	}
 
+	db.AutoMigrate(&model.Runtime{})
 	db.AutoMigrate(&model.Function{})
 
 	l.Info().Str("name",db.Dialector.Name()).Str("databse",db.Debug().Name())
