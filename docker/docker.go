@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -76,10 +77,33 @@ func (d *DockerRuntime) PullImage(imageName string) error {
 } 
 
 func (d *DockerRuntime) RunContainer(options RunContainerOptions) error {
-	time.Sleep(time.Second * 2)
-	fmt.Println("Run Container")
-    // Run a container based on the image of the user
-    // Call this one
+    ctx := context.Background()
+    cli, err := client.NewEnvClient()
+    if err != nil {
+        log.Fatal(err, " :unable to init client")
+    }
+
+    env := d.GetEnv(options.Environment)
+
+    resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: options.Image,
+        Env: env,
+	}, &container.HostConfig{
+		Resources: container.Resources{
+			Memory: options.Ram,
+		},
+	}, nil, nil, options.Name)
+	if err != nil {
+        fmt.Println(err)
+		return err
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{		
+	}); err != nil {
+        fmt.Println(err)
+		return err
+	}
+
 	return nil
 }
 func (d *DockerRuntime) RemoveImage(imageName string) error {
@@ -88,3 +112,14 @@ func (d *DockerRuntime) RemoveImage(imageName string) error {
 	return nil
 }
 
+
+
+func (d *DockerRuntime) GetEnv(env map[string]interface{}) []string {
+    var environ []string
+
+    for k,v := range env {
+        environ = append(environ, fmt.Sprintf("%s=%s", k, v))
+    }
+
+    return environ
+}

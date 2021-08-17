@@ -21,12 +21,16 @@ type Runtime struct {
 }
 
 var (
-	runtimes  = []Runtime{
-		{Image: fmt.Sprintf("%s/node:%s",region,"14"), Name: "nodejs14", Version: "1",Extension: "js",Activator: "node" },
-		{Image: fmt.Sprintf("%s/python:%s",region,"3.8"), Name: "python3", Version: "1",Extension: "py",Activator: "python"},
-	}
+	runtimes  = []Runtime{}
 )
 
+func setRegion(reg string) { 
+	region = reg
+	runtimes = []Runtime{
+		{Image: fmt.Sprintf("mcuve/%s-nodejs:%s",region,"14"), Name: "nodejs14", Version: "1",Extension: "js",Activator: "node" },
+		{Image: fmt.Sprintf("mcuve/%s-python:%s",region,"3.8"), Name: "python3", Version: "1",Extension: "py",Activator: "python"},
+	}
+}
 
 
 func (l *LambdaServer) SeedLambdaServer(ctx context.Context,in *emptypb.Empty) (*aws.LambdaResponse, error) {

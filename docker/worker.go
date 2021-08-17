@@ -1,6 +1,8 @@
 package docker
 
-import "fmt"
+import (
+	"fmt"
+)
 
 
 type containerTask struct {
@@ -73,24 +75,29 @@ func newContainerWorker(dispacher *ContainerDispatcher, runtime ContainerRuntime
 
 func (c *containerWorker) listen() {
 	go func (){
+		var err error 
 		loop: for {
 			c.dispacher.workerPool <- c.tasks // another worker is waiting for a task
 			select {
 				case t := <- c.tasks:
 					switch t.taskType {
 					case "buildImage":
-							c.runtime.BuildImage(t.options.(BuildImageOptions))
+							err = c.runtime.BuildImage(t.options.(BuildImageOptions))
 					case "runContainer":
-							c.runtime.RunContainer(t.options.(RunContainerOptions))
+							err = c.runtime.RunContainer(t.options.(RunContainerOptions))
 					case "pullImage":
-							c.runtime.PullImage(t.options.(string))
+							err = c.runtime.PullImage(t.options.(string))
 					case "removeImage":
-							c.runtime.RemoveImage(t.options.(string))
+							err = c.runtime.RemoveImage(t.options.(string))
 					}
 				case <-c.quit:
 				fmt.Printf("Worker: %d stopping ... \n", c.number+1)
 				break loop
-		}
+			}
+		
+			if err != nil {
+				fmt.Println(err)
+			}
 
 		}
 	}()

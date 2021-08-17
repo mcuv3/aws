@@ -62,6 +62,7 @@ func Run(l zerolog.Logger) error {
 	d.Start()
 	
 	region = "us-east-1"
+	setRegion(region)
 
 	aws.RegisterLambdaServiceServer(s,&LambdaServer{
 		auth: &authInterceptor,

@@ -21,6 +21,7 @@ message CreateFunctionRequest {
     Runtime runtime = 2;
     int32 ram = 3;
     string code  = 4;
+    string handler = 5;
 }
 
 message LambdaResponse {
