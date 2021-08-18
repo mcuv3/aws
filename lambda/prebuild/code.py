@@ -1,5 +1,4 @@
 
 
 
-def hello():
-    print("Hello from Lambda")
+def hello():print("Hello from Lambda")
