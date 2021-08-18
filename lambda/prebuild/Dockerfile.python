@@ -1,0 +1,7 @@
+FROM python:3.8-alpine
+
+
+COPY runtime.py .
+
+
+CMD [ "python", "runtime.py" ]

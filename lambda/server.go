@@ -69,7 +69,7 @@ func Run(l zerolog.Logger) error {
 		logger: l,
 		db: db,
 		docker: d,
-		region: "us-east-1",
+		region: "us-east-1", 
 	})
 
 	reflection.Register(s)

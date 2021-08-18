@@ -30,6 +30,9 @@ func (l *LambdaServer) CreateFunction(ctx context.Context,req *aws.CreateFunctio
 	if tx.Error !=nil {
 		return nil,grpc.Errorf(codes.Internal,"Unable to find runtime")
 	} 
+	path.Base(req.GetHandler())
+	ext := path.Ext(req.GetHandler())
+	p := strings.Replace(req.GetHandler(),ext,"",1)
  
 	function := model.Function{
 		Name: req.GetName(),
@@ -38,6 +41,7 @@ func (l *LambdaServer) CreateFunction(ctx context.Context,req *aws.CreateFunctio
 		Image: image, 
 		Handler: req.GetHandler(),
 		AccountId: us.AccountId,
+		Path: p,
 	}
 	
 	tx =  l.db.Create(&function)
@@ -45,15 +49,12 @@ func (l *LambdaServer) CreateFunction(ctx context.Context,req *aws.CreateFunctio
 		return nil,grpc.Errorf(codes.Internal,"Error creating function.")
 	}
 
-	path.Base(req.GetHandler())
-	ext := path.Ext(req.GetHandler())
-	p := strings.Replace(req.GetHandler(),ext,"",1)
 
 	dockerFile := fmt.Sprintf(`
 	FROM %s
-	RUN echo "%s" > %s.%s
-	CMD ["%s", "%s.%s"]
-	`,runtime.Image,req.GetCode(),p,runtime.Extension,runtime.Activator,p,runtime.Extension)
+	RUN echo "%s" > %s.%s 
+	CMD ["%s", "runtime.%s"]
+	`,runtime.Image,req.GetCode(),p,runtime.Extension,runtime.Activator,runtime.Extension)
 
 	fmt.Println(dockerFile)
 	
@@ -85,10 +86,10 @@ func (l *LambdaServer) TestFunction(ctx context.Context, req *aws.TestFunctionRe
 	if  tx.Error !=nil {
 		return nil,grpc.Errorf(codes.NotFound,"Function not found")
 	}
-
+ 
 	env := map[string]interface{}{
 		"EVENT_DATA": req.GetEventData(),
-		"HANDLER" : fmt.Sprintf("code.%s",res.Handler),
+		"HANDLER" : res.Handler,
 	}
 
 

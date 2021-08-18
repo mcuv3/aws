@@ -98,6 +98,9 @@ func (d *DockerRuntime) RunContainer(options RunContainerOptions) error {
 		return err
 	}
 
+    fmt.Println("Container id=" + resp.ID)
+
+
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{		
 	}); err != nil {
         fmt.Println(err)
