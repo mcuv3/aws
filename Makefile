@@ -14,3 +14,6 @@ proto_res:
 	--grpc-gateway_out=:proto proto/responses/responses.proto --openapiv2_out=:docs
 gen:
 	protoc --proto_path=proto proto/**/*.proto  --go_out=:pb --go-grpc_out=:pb --grpc-gateway_out=:pb --openapiv2_out=:swagger
+
+python:
+	python3 -m grpc_tools.protoc  -I ./proto --python_out=./proto --grpc_python_out=./proto ./proto/lambda.proto

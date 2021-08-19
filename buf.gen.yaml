@@ -7,4 +7,13 @@ plugins:
     out: proto
     opt: require_unimplemented_servers=false
     # opt: paths=source_relative
+  - name: grpc
+    out: proto
+    opt: import_style=typescript,mode=grpcwebtext
+    path: protoc-gen-grpc-web
+  - name: python
+    out: proto
+    opt: m=grpc_tools.protoc,grpc_python_out=./proto
+    path: python3
+
 
