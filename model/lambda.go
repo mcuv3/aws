@@ -7,6 +7,7 @@ type Function struct {
 	gorm.Model
 	Name string `gorm:"type:varchar(100);not null;unique_index"`
 	Memory int `gorm:"default:0"`
+	Arn string `gorm:"type:varchar(100);not null;unique_index"`
 	RuntimeID uint 
 	Code string `gorm:"type:text;not null"`
 	Handler string `gorm:"type:varchar(100);not null"`

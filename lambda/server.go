@@ -22,6 +22,8 @@ type LambdaServer struct {
 	docker *docker.ContainerDispatcher
 	db *gorm.DB
 	region string
+	CapPerInvoque int
+	LambdaExecutionManager
 }
 
 var region string
@@ -53,6 +55,7 @@ func Run(l zerolog.Logger) error {
 
 	authInterceptor := auth.AuthInterceptor{Issuer: "lambda",Logger: l,
 	ServerPrefix: "/lambda.LambdaService/",
+	PublicMethods: []string{"ReceiveEvents"},
 	Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()),grpc.StreamInterceptor(authInterceptor.Stream()))
@@ -70,6 +73,9 @@ func Run(l zerolog.Logger) error {
 		db: db,
 		docker: d,
 		region: "us-east-1", 
+		LambdaExecutionManager: LambdaExecutionManager{
+			CapPerInvoque:10,
+		},
 	})
 
 	reflection.Register(s)

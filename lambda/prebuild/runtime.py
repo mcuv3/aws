@@ -2,6 +2,9 @@ import importlib
 import os
 from inspect import signature
 
+# TODO: implement grpc client to receive messages from host 
+
+
 try:
     handler = os.environ.get("HANDLER")
     mod = handler.split(".")

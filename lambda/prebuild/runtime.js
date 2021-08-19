@@ -1,6 +1,8 @@
 
 
 (()=>{
+
+    // TODO: implement grpc client to receive messages from host 
     const eventData = process.env.EVENT_DATA;
     const handler = process.env.HANDLER;
     

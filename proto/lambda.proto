@@ -35,8 +35,16 @@ message TestFunctionResquest {
 } 
 
 message InvoqueFunctionRequest {
-    string function_name = 1;
+    string arn = 1;
     string event_data = 2;
+}
+
+message ReceiveEventRequest {
+    string hash = 1;
+}
+
+message EventResponse {
+    string message = 1;
 }
 
 service LambdaService {
@@ -44,4 +52,5 @@ service LambdaService {
     rpc TestFunction(TestFunctionResquest) returns (LambdaResponse) {};
     rpc InvoqueFunction(InvoqueFunctionRequest) returns (LambdaResponse) {};
     rpc SeedLambdaServer(google.protobuf.Empty) returns (LambdaResponse) {};
+    rpc ReceiveEvents(ReceiveEventRequest) returns (stream EventResponse) {};
 }

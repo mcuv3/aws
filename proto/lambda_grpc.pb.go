@@ -22,6 +22,7 @@ type LambdaServiceClient interface {
 	TestFunction(ctx context.Context, in *TestFunctionResquest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error)
+	ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error)
 }
 
 type lambdaServiceClient struct {
@@ -68,6 +69,38 @@ func (c *lambdaServiceClient) SeedLambdaServer(ctx context.Context, in *emptypb.
 	return out, nil
 }
 
+func (c *lambdaServiceClient) ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_LambdaService_serviceDesc.Streams[0], "/lambda.LambdaService/ReceiveEvents", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &lambdaServiceReceiveEventsClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type LambdaService_ReceiveEventsClient interface {
+	Recv() (*EventResponse, error)
+	grpc.ClientStream
+}
+
+type lambdaServiceReceiveEventsClient struct {
+	grpc.ClientStream
+}
+
+func (x *lambdaServiceReceiveEventsClient) Recv() (*EventResponse, error) {
+	m := new(EventResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // LambdaServiceServer is the server API for LambdaService service.
 // All implementations should embed UnimplementedLambdaServiceServer
 // for forward compatibility
@@ -76,6 +109,7 @@ type LambdaServiceServer interface {
 	TestFunction(context.Context, *TestFunctionResquest) (*LambdaResponse, error)
 	InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error)
 	SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error)
+	ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error
 }
 
 // UnimplementedLambdaServiceServer should be embedded to have forward compatible implementations.
@@ -93,6 +127,9 @@ func (UnimplementedLambdaServiceServer) InvoqueFunction(context.Context, *Invoqu
 }
 func (UnimplementedLambdaServiceServer) SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SeedLambdaServer not implemented")
+}
+func (UnimplementedLambdaServiceServer) ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error {
+	return status.Errorf(codes.Unimplemented, "method ReceiveEvents not implemented")
 }
 
 // UnsafeLambdaServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -178,6 +215,27 @@ func _LambdaService_SeedLambdaServer_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LambdaService_ReceiveEvents_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(ReceiveEventRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(LambdaServiceServer).ReceiveEvents(m, &lambdaServiceReceiveEventsServer{stream})
+}
+
+type LambdaService_ReceiveEventsServer interface {
+	Send(*EventResponse) error
+	grpc.ServerStream
+}
+
+type lambdaServiceReceiveEventsServer struct {
+	grpc.ServerStream
+}
+
+func (x *lambdaServiceReceiveEventsServer) Send(m *EventResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _LambdaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lambda.LambdaService",
 	HandlerType: (*LambdaServiceServer)(nil),
@@ -199,6 +257,12 @@ var _LambdaService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _LambdaService_SeedLambdaServer_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "ReceiveEvents",
+			Handler:       _LambdaService_ReceiveEvents_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "lambda.proto",
 }

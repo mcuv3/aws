@@ -7,7 +7,7 @@ import (
 )
 
 type Arn struct { 
-	Region
+	Region string
 	Service
 	AccountId string
 	ResourceId string
@@ -30,7 +30,7 @@ func (a Arn) String() string {
 	return fmt.Sprintf("arn:aws:%s:%s:%s:%s",a.Service,a.Region,a.AccountId,a.ResourceId)
 }
 
-func NewArn(s Service,r Region,accountId string,ResourceId string) (*Arn,error) {
+func NewArn(s Service,r string,accountId string,ResourceId string) (*Arn,error) {
 	arn := &Arn{
 		Region: r,
 		Service: s,

@@ -24,7 +24,7 @@ func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) 
 		return nil, err
 	}
 
-	arn,_ := auth.NewArn(auth.IAM,auth.REGION_NONE,accountId,fmt.Sprintf("/user/%s",us.Name))
+	arn,_ := auth.NewArn(auth.IAM,"",accountId,fmt.Sprintf("/user/%s",us.Name))
 
 	user := model.User{
 	Password: string(encrypted),
@@ -114,7 +114,7 @@ func (storage *IamRepository) UpdateUser(accountId string , updated *aws.User) (
 	arn := us.Arn
 
 	if us.Name != updated.Name { 
-		newArn,err := auth.NewArn(auth.IAM,auth.REGION_NONE,accountId,fmt.Sprintf("/user/%s",us.Name))
+		newArn,err := auth.NewArn(auth.IAM,"",accountId,fmt.Sprintf("/user/%s",us.Name))
 		if err !=nil { return nil, err }
 		arn = newArn.String()
 	}
