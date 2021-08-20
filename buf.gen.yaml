@@ -7,13 +7,20 @@ plugins:
     out: proto
     opt: require_unimplemented_servers=false
     # opt: paths=source_relative
+  # - name: grpc
+  #   out: lambda/prebuild/nodejs
+  #   opt: plugin=lambda/prebuild/nodejs,js_out=lambda/prebuild/nodejs
+  #   path: protoc-gen-ts
+
+  - name: js
+    out: lambda/prebuild/nodejs/dist/gen
+    opt: import_style=commonjs,binary
+
   - name: grpc
-    out: proto
-    opt: import_style=typescript,mode=grpcwebtext
-    path: protoc-gen-grpc-web
-  - name: python
-    out: proto
-    opt: m=grpc_tools.protoc,grpc_python_out=./proto
-    path: python3
+    out: lambda/prebuild/nodejs/dist/gen
+    opt: grpc_js
+    path: grpc_tools_node_protoc_plugin
 
-
+  - name: ts
+    out: lambda/prebuild/nodejs/src/gen
+    opt: grpc_js

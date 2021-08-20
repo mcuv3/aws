@@ -34,7 +34,7 @@ func setRegion(reg string) {
 
 
 func (l *LambdaServer) SeedLambdaServer(ctx context.Context,in *emptypb.Empty) (*aws.LambdaResponse, error) {
-
+ 
 	rnts := []model.Runtime{}
 	for _,runtime := range runtimes {
 		rnts = append(rnts, model.Runtime{

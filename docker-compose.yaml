@@ -1,5 +1,4 @@
-version: '3.3'
-
+version: "3.3"
 
 x-db: &defaults-db
   image: postgres
@@ -9,57 +8,55 @@ x-db: &defaults-db
     POSTGRES_USER: mcuve
     POSTGRES_DB: db
 
-
 services:
   sqs:
     build: .
     container_name: sqs
-    ports: 
-        - "6001:50051"
-    env_file: 
-      ./env/sqs.env
-    volumes: 
-        - .:/app
-    depends_on: 
+    ports:
+      - "6001:50051"
+    env_file: ./env/sqs.env
+    volumes:
+      - .:/app
+    depends_on:
       - sqs-db
   iam:
     build: .
     container_name: iam
-    ports: 
-        - "6002:50051"
-    env_file: 
-      ./env/iam.env
-    volumes: 
-        - .:/app
-    depends_on: 
+    ports:
+      - "6002:50051"
+    env_file: ./env/iam.env
+    volumes:
+      - .:/app
+    depends_on:
       - iam-db
-    
+
   lambda:
     build: .
     container_name: lambda
-    ports: 
-        - "6003:50051"
-    env_file: 
-      ./env/lambda.env
-    volumes: 
-        - .:/app
-        - /var/run/docker.sock:/var/run/docker.sock
-    depends_on: 
+    ports:
+      - "6003:50051"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    env_file: ./env/lambda.env
+    volumes:
+      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
       - lambda-db
-    
+
   cache:
     image: redis
-    ports: 
+    ports:
       - "6666:6379"
-    logging: 
+    logging:
       driver: none
-  
-  admin: 
+
+  admin:
     image: dpage/pgadmin4
     container_name: admin
-    ports: 
+    ports:
       - "5050:80"
-    environment: 
+    environment:
       PGADMIN_DEFAULT_EMAIL: mcuve@outlook.com
       PGADMIN_DEFAULT_PASSWORD: maotrix1
     logging:
@@ -68,22 +65,21 @@ services:
   sqs-db:
     <<: *defaults-db
     container_name: sqs-db
-    volumes: 
+    volumes:
       - sqs-data:/var/lib/postgresql/data
   iam-db:
     <<: *defaults-db
     container_name: iam-db
-    volumes: 
+    volumes:
       - iam-data:/var/lib/postgresql/data
 
   lambda-db:
     <<: *defaults-db
     container_name: lambda-db
-    volumes: 
+    volumes:
       - lambda-data:/var/lib/postgresql/data
 
-volumes: 
+volumes:
   sqs-data:
   iam-data:
   lambda-data:
-

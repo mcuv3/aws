@@ -8,8 +8,6 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/iam"
 	"github.com/MauricioAntonioMartinez/aws/lambda"
 	"github.com/MauricioAntonioMartinez/aws/sqs"
-
-	// "github.com/qinains/fastergoding"
 	"github.com/rs/zerolog"
 )
 

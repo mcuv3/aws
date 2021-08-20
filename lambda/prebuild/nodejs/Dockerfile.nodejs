@@ -1,5 +1,14 @@
 FROM node:14
 
-COPY runtime.js .
+COPY package.json .
+COPY yarn.lock .
 
-CMD ["node", "runtime.js"]
+RUN mkdir -p ./dist/gen
+
+RUN yarn install --prod
+
+COPY . .
+RUN yarn build
+
+
+CMD ["node", "./dist/runtime.js"]
