@@ -88,11 +88,13 @@ func (d *DockerRuntime) RunContainer(options RunContainerOptions) error {
     resp, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: options.Image,
         Env: env,
+        
 	}, &container.HostConfig{
 		Resources: container.Resources{
 			Memory: options.Ram,
 		},
-	}, nil, nil, options.Name)
+        NetworkMode: "host",
+	},nil, nil, options.Name)
 	if err != nil {
         fmt.Println(err)
 		return err

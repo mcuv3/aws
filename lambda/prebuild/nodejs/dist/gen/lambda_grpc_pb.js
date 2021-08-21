@@ -82,6 +82,17 @@ function deserialize_lambda_TestFunctionResquest(buffer_arg) {
   return lambda_pb.TestFunctionResquest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_lambda_UpdateLambdaRequest(arg) {
+  if (!(arg instanceof lambda_pb.UpdateLambdaRequest)) {
+    throw new Error('Expected argument of type lambda.UpdateLambdaRequest');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_lambda_UpdateLambdaRequest(buffer_arg) {
+  return lambda_pb.UpdateLambdaRequest.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 var LambdaServiceService = exports.LambdaServiceService = {
   createFunction: {
@@ -138,6 +149,17 @@ var LambdaServiceService = exports.LambdaServiceService = {
     requestDeserialize: deserialize_lambda_ReceiveEventRequest,
     responseSerialize: serialize_lambda_EventResponse,
     responseDeserialize: deserialize_lambda_EventResponse,
+  },
+  updateLambda: {
+    path: '/lambda.LambdaService/UpdateLambda',
+    requestStream: false,
+    responseStream: false,
+    requestType: lambda_pb.UpdateLambdaRequest,
+    responseType: lambda_pb.LambdaResponse,
+    requestSerialize: serialize_lambda_UpdateLambdaRequest,
+    requestDeserialize: deserialize_lambda_UpdateLambdaRequest,
+    responseSerialize: serialize_lambda_LambdaResponse,
+    responseDeserialize: deserialize_lambda_LambdaResponse,
   },
 };
 

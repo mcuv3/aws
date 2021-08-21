@@ -23,6 +23,7 @@ type LambdaServiceClient interface {
 	InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error)
 	ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error)
+	UpdateLambda(ctx context.Context, in *UpdateLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 }
 
 type lambdaServiceClient struct {
@@ -101,6 +102,15 @@ func (x *lambdaServiceReceiveEventsClient) Recv() (*EventResponse, error) {
 	return m, nil
 }
 
+func (c *lambdaServiceClient) UpdateLambda(ctx context.Context, in *UpdateLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error) {
+	out := new(LambdaResponse)
+	err := c.cc.Invoke(ctx, "/lambda.LambdaService/UpdateLambda", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LambdaServiceServer is the server API for LambdaService service.
 // All implementations should embed UnimplementedLambdaServiceServer
 // for forward compatibility
@@ -110,6 +120,7 @@ type LambdaServiceServer interface {
 	InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error)
 	SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error)
 	ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error
+	UpdateLambda(context.Context, *UpdateLambdaRequest) (*LambdaResponse, error)
 }
 
 // UnimplementedLambdaServiceServer should be embedded to have forward compatible implementations.
@@ -130,6 +141,9 @@ func (UnimplementedLambdaServiceServer) SeedLambdaServer(context.Context, *empty
 }
 func (UnimplementedLambdaServiceServer) ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method ReceiveEvents not implemented")
+}
+func (UnimplementedLambdaServiceServer) UpdateLambda(context.Context, *UpdateLambdaRequest) (*LambdaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLambda not implemented")
 }
 
 // UnsafeLambdaServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -236,6 +250,24 @@ func (x *lambdaServiceReceiveEventsServer) Send(m *EventResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _LambdaService_UpdateLambda_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateLambdaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LambdaServiceServer).UpdateLambda(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lambda.LambdaService/UpdateLambda",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LambdaServiceServer).UpdateLambda(ctx, req.(*UpdateLambdaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LambdaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lambda.LambdaService",
 	HandlerType: (*LambdaServiceServer)(nil),
@@ -255,6 +287,10 @@ var _LambdaService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SeedLambdaServer",
 			Handler:    _LambdaService_SeedLambdaServer_Handler,
+		},
+		{
+			MethodName: "UpdateLambda",
+			Handler:    _LambdaService_UpdateLambda_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

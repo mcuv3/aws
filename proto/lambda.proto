@@ -47,10 +47,15 @@ message EventResponse {
     string message = 1;
 }
 
+message UpdateLambdaRequest {
+    string code = 1;
+}
+
 service LambdaService {
     rpc CreateFunction(CreateFunctionRequest) returns (LambdaResponse) {};
     rpc TestFunction(TestFunctionResquest) returns (LambdaResponse) {};
     rpc InvoqueFunction(InvoqueFunctionRequest) returns (LambdaResponse) {};
     rpc SeedLambdaServer(google.protobuf.Empty) returns (LambdaResponse) {};
     rpc ReceiveEvents(ReceiveEventRequest) returns (stream EventResponse) {};
+    rpc UpdateLambda(UpdateLambdaRequest) returns (LambdaResponse) {};
 }

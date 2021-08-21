@@ -3,12 +3,10 @@ FROM node:14
 COPY package.json .
 COPY yarn.lock .
 
-RUN mkdir -p ./dist/gen
-
-RUN yarn install --prod
+RUN yarn install 
 
 COPY . .
-RUN yarn build
 
+RUN mv ./dist/* .
 
-CMD ["node", "./dist/runtime.js"]
+CMD ["node", "runtime.js"]

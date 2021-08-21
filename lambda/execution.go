@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"fmt"
 	"sync"
 	"time"
 
@@ -42,7 +43,7 @@ var (
 	running map[string][]*LambdaExecution = make(map[string][]*LambdaExecution)
 )
 
-func (l *LambdaExecutionManager) getExection(hash string) *LambdaExecution {
+func (l *LambdaExecutionManager) getExecution(hash string) *LambdaExecution {
 	for _,exe := range running {
 		for _,lx := range exe {
 			lx.mt.RLock()
@@ -56,25 +57,27 @@ func (l *LambdaExecutionManager) getExection(hash string) *LambdaExecution {
 	return nil
 }
 
-func (l *LambdaExecutionManager) newLambdaExecution(arn string) error {
+func (l *LambdaExecutionManager) newLambdaExecution(arn string) (*LambdaExecution,error) {
 	valHash := helpers.RandString(20)
 	hs,err := NewHash(valHash)
 
 	if err !=nil {
-		return err
+		return nil,err
 	}
 
-	 running[arn] = append(running[arn], &LambdaExecution{
+	lx := LambdaExecution{
 		FuncArn: arn,
 		Events: make(chan string),
 		Hash: hs,
-		ValHash: valHash,
+		ValHash: valHash,  
 		mt: sync.RWMutex{},
 		CurrentExecutions: 1,
 		LastReceive: time.Now(),
-	 })
+	 }
 
-	 return nil
+	 running[arn] = append(running[arn], &lx)
+
+	 return &lx,nil
 }
 
 func (l *LambdaExecutionManager) getAvaibleExecution(funcArn string) *LambdaExecution {
@@ -90,9 +93,14 @@ func (l *LambdaExecutionManager) getAvaibleExecution(funcArn string) *LambdaExec
 		if lx.CurrentExecutions < l.CapPerInvoque {
 			lx.CurrentExecutions++
 			lambdaExecutor = lx
+			lx.mt.Unlock()
 			break
 		}
 		lx.mt.Unlock()
+	}
+
+	if lambdaExecutor != nil {
+		fmt.Println("Executor available hash",lambdaExecutor.Hash)
 	}
 
 	return lambdaExecutor

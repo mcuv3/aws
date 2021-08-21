@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -56,10 +57,12 @@ func (l *LambdaServer) CreateFunction(ctx context.Context,req *aws.CreateFunctio
 		return nil,grpc.Errorf(codes.Internal,"Error creating function.")
 	}
 
-
-	dockerFile := fmt.Sprintf(`
+ 
+	dockerFile := fmt.Sprintf(` 
 	FROM %s
 	RUN echo "%s" > %s.%s 
+
+	RUN ls
 	CMD ["%s", "runtime.%s"]
 	`,runtime.Image,req.GetCode(),p,runtime.Extension,runtime.Activator,runtime.Extension)
 
@@ -115,31 +118,39 @@ func (l *LambdaServer) TestFunction(ctx context.Context, req *aws.TestFunctionRe
 
 
 func (l *LambdaServer) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunctionRequest) (*aws.LambdaResponse,error) {
-
+ 
 	res := model.Function{}
 
 	tx := l.db.Where("arn = ?",req.GetArn()).First(&res)
+
 
 	if  tx.Error !=nil {
 		return nil,grpc.Errorf(codes.NotFound,"Function not found")
 	}
 
- 
-	env := map[string]interface{}{
-		"EVENT_DATA": req.GetEventData(),
-		"HANDLER" : res.Handler,
-	}
-
-
 	freeExecution := l.getAvaibleExecution(res.Arn)
-
+	
 	if freeExecution == nil {
+		lx, err := l.newLambdaExecution(res.Arn)
+		
+		if err != nil {
+			return nil,grpc.Errorf(codes.Internal,"Something went wrong running the lambda")
+		}
+
+		env := map[string]interface{}{
+			"EVENT_DATA": req.GetEventData(),
+			"HANDLER" : res.Handler,
+			"HOST":"localhost:6003",
+			"HASH": lx.Hash,
+			"LISTEN":true,
+		}
+
 		l.docker.RunContainer(docker.RunContainerOptions{
 			Image: res.Image,
 			Ram: int64(res.Memory),
 			Environment: env,
+			Name: strconv.Itoa(int(time.Now().Unix())),
 		})
-		l.newLambdaExecution(res.Arn)
 	} else {
 		go func(){
 			freeExecution.Events <- req.GetEventData()
@@ -158,10 +169,10 @@ func (l *LambdaServer) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunc
 func (l *LambdaServer) ReceiveEvents( req *aws.ReceiveEventRequest,stream aws.LambdaService_ReceiveEventsServer) error  {
 	
 
-	execution := l.LambdaExecutionManager.getExection(req.GetHash())
+	execution := l.LambdaExecutionManager.getExecution(req.GetHash())
 
 	if execution == nil {
-		return grpc.Errorf(codes.Aborted,"Invalid or unknown token")
+		return grpc.Errorf(codes.Aborted,"Invalid or unknown hash")
 	}
 
 	fn := model.Function{}
@@ -172,20 +183,31 @@ func (l *LambdaServer) ReceiveEvents( req *aws.ReceiveEventRequest,stream aws.La
 		return grpc.Errorf(codes.NotFound,"Function not found")
 	}
 
-	broker :for {
+ 
+	broker :for {  
+		fmt.Println("Starting sending messages to lambda runtimes")
 		select {
 			case event := <- execution.Events:
 				stream.Send(&aws.EventResponse{Message: event})
 				execution.mt.Lock()
 				execution.CurrentExecutions-- 
 				execution.mt.Unlock()
-			case  <- time.After(time.Second * 60):
+			case  <- time.After(time.Second * 30) :
+				// remove from the list of running executions
 				l.logger.Info().Str("Expired receive",execution.ValHash)
 				break broker
 		}
 
 	}
 
+fmt.Println("Connection closed from server hash ",execution.ValHash)
 
 	return nil
+}
+
+
+
+func (l *LambdaServer) UpdateLambda(ctx context.Context,req *aws.UpdateLambdaRequest) (*aws.LambdaResponse,error){
+	
+	return nil,nil
 }

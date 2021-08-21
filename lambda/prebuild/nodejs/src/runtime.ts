@@ -1,36 +1,34 @@
-import grpc from "@grpc/grpc-js";
+import { credentials } from "@grpc/grpc-js";
 import { LambdaServiceClient } from "./gen/lambda_grpc_pb";
 import { EventResponse, ReceiveEventRequest } from "./gen/lambda_pb";
 
-function getNewClient(
-  resolve: (v: string) => void,
-  reject: (v: string) => void
-) {
-  const client = new LambdaServiceClient(
-    process.env.HOST!,
-    grpc.credentials.createInsecure()
-  );
-  const req = new ReceiveEventRequest();
-  req.setHash(process.env.HASH!);
+function getNewClient(code: Function) {
+  return (resolve: (v: string) => void, reject: (v: string) => void) => {
+    const client = new LambdaServiceClient(
+      process.env.HOST!,
+      credentials.createInsecure()
+    );
+    const req = new ReceiveEventRequest();
+    req.setHash(process.env.HASH!);
 
-  const res = client.receiveEvents(req);
+    const res = client.receiveEvents(req);
 
-  res.on("error", (err) => {
-    console.log("Something went wrong ", err);
-    reject(err.message);
-  });
+    res.on("error", (err) => {
+      console.log("Something went wrong ", err);
+      reject(err.message);
+    });
 
-  res.on("data", (data: EventResponse) => {
-    console.log(`Data Received ${data}`);
-    // where we call the function again and again
-  });
+    res.on("data", (data: EventResponse) => {
+      code(data);
+    });
 
-  res.on("end", () => console.log("Ended"));
+    res.on("end", () => console.log("Ended"));
 
-  res.on("close", () => {
-    resolve("Closed");
-    console.log("Connection closed");
-  });
+    res.on("close", () => {
+      // resolve("Closed");
+      console.log("Connection closed");
+    });
+  };
 }
 
 (async () => {
@@ -56,5 +54,8 @@ function getNewClient(
   }
 
   code(eventData);
-  await new Promise(getNewClient);
+
+  if (process.env.LISTEN) {
+    await new Promise(getNewClient(code));
+  }
 })();

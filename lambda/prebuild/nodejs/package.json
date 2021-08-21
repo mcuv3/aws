@@ -6,13 +6,13 @@
   "author": "mcuve",
   "license": "MIT",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "docker": "tsc && docker build -t mcuve/us-east-1-nodejs:14 -f Dockerfile.nodejs . "
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.3.7",
     "@grpc/proto-loader": "^0.6.4",
-    "google-protobuf": "^3.17.3",
-    "typescript": "^4.3.5"
+    "google-protobuf": "^3.17.3"
   },
   "devDependencies": {
     "@types/node": "^16.6.2",

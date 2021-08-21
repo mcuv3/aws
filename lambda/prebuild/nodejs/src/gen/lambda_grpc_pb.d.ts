@@ -14,6 +14,7 @@ interface ILambdaServiceService extends grpc.ServiceDefinition<grpc.UntypedServi
     invoqueFunction: ILambdaServiceService_IInvoqueFunction;
     seedLambdaServer: ILambdaServiceService_ISeedLambdaServer;
     receiveEvents: ILambdaServiceService_IReceiveEvents;
+    updateLambda: ILambdaServiceService_IUpdateLambda;
 }
 
 interface ILambdaServiceService_ICreateFunction extends grpc.MethodDefinition<lambda_pb.CreateFunctionRequest, lambda_pb.LambdaResponse> {
@@ -61,6 +62,15 @@ interface ILambdaServiceService_IReceiveEvents extends grpc.MethodDefinition<lam
     responseSerialize: grpc.serialize<lambda_pb.EventResponse>;
     responseDeserialize: grpc.deserialize<lambda_pb.EventResponse>;
 }
+interface ILambdaServiceService_IUpdateLambda extends grpc.MethodDefinition<lambda_pb.UpdateLambdaRequest, lambda_pb.LambdaResponse> {
+    path: "/lambda.LambdaService/UpdateLambda";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<lambda_pb.UpdateLambdaRequest>;
+    requestDeserialize: grpc.deserialize<lambda_pb.UpdateLambdaRequest>;
+    responseSerialize: grpc.serialize<lambda_pb.LambdaResponse>;
+    responseDeserialize: grpc.deserialize<lambda_pb.LambdaResponse>;
+}
 
 export const LambdaServiceService: ILambdaServiceService;
 
@@ -70,6 +80,7 @@ export interface ILambdaServiceServer extends grpc.UntypedServiceImplementation 
     invoqueFunction: grpc.handleUnaryCall<lambda_pb.InvoqueFunctionRequest, lambda_pb.LambdaResponse>;
     seedLambdaServer: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, lambda_pb.LambdaResponse>;
     receiveEvents: grpc.handleServerStreamingCall<lambda_pb.ReceiveEventRequest, lambda_pb.EventResponse>;
+    updateLambda: grpc.handleUnaryCall<lambda_pb.UpdateLambdaRequest, lambda_pb.LambdaResponse>;
 }
 
 export interface ILambdaServiceClient {
@@ -87,6 +98,9 @@ export interface ILambdaServiceClient {
     seedLambdaServer(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     receiveEvents(request: lambda_pb.ReceiveEventRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<lambda_pb.EventResponse>;
     receiveEvents(request: lambda_pb.ReceiveEventRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<lambda_pb.EventResponse>;
+    updateLambda(request: lambda_pb.UpdateLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
 }
 
 export class LambdaServiceClient extends grpc.Client implements ILambdaServiceClient {
@@ -105,4 +119,7 @@ export class LambdaServiceClient extends grpc.Client implements ILambdaServiceCl
     public seedLambdaServer(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     public receiveEvents(request: lambda_pb.ReceiveEventRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<lambda_pb.EventResponse>;
     public receiveEvents(request: lambda_pb.ReceiveEventRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<lambda_pb.EventResponse>;
+    public updateLambda(request: lambda_pb.UpdateLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    public updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    public updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
 }

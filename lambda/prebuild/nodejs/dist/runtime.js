@@ -35,31 +35,29 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-var grpc_js_1 = __importDefault(require("@grpc/grpc-js"));
+var grpc_js_1 = require("@grpc/grpc-js");
 var lambda_grpc_pb_1 = require("./gen/lambda_grpc_pb");
 var lambda_pb_1 = require("./gen/lambda_pb");
-function getNewClient(resolve, reject) {
-    var client = new lambda_grpc_pb_1.LambdaServiceClient(process.env.HOST, grpc_js_1.default.credentials.createInsecure());
-    var req = new lambda_pb_1.ReceiveEventRequest();
-    req.setHash(process.env.HASH);
-    var res = client.receiveEvents(req);
-    res.on("error", function (err) {
-        console.log("Something went wrong ", err);
-        reject(err.message);
-    });
-    res.on("data", function (data) {
-        console.log("Data Received " + data);
-        // where we call the function again and again
-    });
-    res.on("end", function () { return console.log("Ended"); });
-    res.on("close", function () {
-        resolve("Closed");
-        console.log("Connection closed");
-    });
+function getNewClient(code) {
+    return function (resolve, reject) {
+        var client = new lambda_grpc_pb_1.LambdaServiceClient(process.env.HOST, grpc_js_1.credentials.createInsecure());
+        var req = new lambda_pb_1.ReceiveEventRequest();
+        req.setHash(process.env.HASH);
+        var res = client.receiveEvents(req);
+        res.on("error", function (err) {
+            console.log("Something went wrong ", err);
+            reject(err.message);
+        });
+        res.on("data", function (data) {
+            code(data);
+        });
+        res.on("end", function () { return console.log("Ended"); });
+        res.on("close", function () {
+            // resolve("Closed");
+            console.log("Connection closed");
+        });
+    };
 }
 (function () { return __awaiter(void 0, void 0, void 0, function () {
     var eventData, handler, path, ext, fn, pt, mod, code;
@@ -81,10 +79,12 @@ function getNewClient(resolve, reject) {
                     console.log(fn + " is not a function sorry");
                 }
                 code(eventData);
-                return [4 /*yield*/, new Promise(getNewClient)];
+                if (!process.env.LISTEN) return [3 /*break*/, 2];
+                return [4 /*yield*/, new Promise(getNewClient(code))];
             case 1:
                 _a.sent();
-                return [2 /*return*/];
+                _a.label = 2;
+            case 2: return [2 /*return*/];
         }
     });
 }); })();

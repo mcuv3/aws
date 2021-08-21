@@ -148,6 +148,26 @@ export namespace EventResponse {
     }
 }
 
+export class UpdateLambdaRequest extends jspb.Message { 
+    getCode(): string;
+    setCode(value: string): UpdateLambdaRequest;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): UpdateLambdaRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: UpdateLambdaRequest): UpdateLambdaRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: UpdateLambdaRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): UpdateLambdaRequest;
+    static deserializeBinaryFromReader(message: UpdateLambdaRequest, reader: jspb.BinaryReader): UpdateLambdaRequest;
+}
+
+export namespace UpdateLambdaRequest {
+    export type AsObject = {
+        code: string,
+    }
+}
+
 export enum Runtime {
     NODEJS14 = 0,
     PYTHON3 = 1,
