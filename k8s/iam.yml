@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   app: iam-svc
-spec:
+spec: # TODO: implement k8s services and replicas for all the current services.
   selector:
     app: iam
   ports:

@@ -15,27 +15,25 @@ import (
 	"google.golang.org/grpc/reflection"
 	"gorm.io/gorm"
 )
- 
+
 type LambdaServer struct {
-	auth *auth.AuthInterceptor
-	logger zerolog.Logger
-	docker *docker.ContainerDispatcher
-	db *gorm.DB
-	region string
+	auth          *auth.AuthInterceptor
+	logger        zerolog.Logger
+	docker        *docker.ContainerDispatcher
+	db            *gorm.DB
+	region        string
 	CapPerInvoque int
 	LambdaExecutionManager
 }
 
 var region string
 
-
-
 func Run(l zerolog.Logger) error {
 
-	db,err := database.New()
+	db, err := database.New()
 
-	if err !=nil {
-		err = fmt.Errorf("Failed to connect database: %w",err)
+	if err != nil {
+		err = fmt.Errorf("Failed to connect database: %w", err)
 		l.Fatal().Err(err).Msg("Filed to connect the database")
 		return err
 	}
@@ -43,52 +41,47 @@ func Run(l zerolog.Logger) error {
 	db.AutoMigrate(&model.Runtime{})
 	db.AutoMigrate(&model.Function{})
 
-	l.Info().Str("name",db.Dialector.Name()).Str("databse",db.Debug().Name())
+	l.Info().Str("name", db.Dialector.Name()).Str("databse", db.Debug().Name())
 
-	
-	lis,err := net.Listen("tcp",":50051")
+	lis, err := net.Listen("tcp", ":6002")
 
-	if err !=nil {
-		l.Err(err).Str("listener",lis.Addr().String()).Msg("Failed to listen")
+	if err != nil {
+		l.Err(err).Str("listener", lis.Addr().String()).Msg("Failed to listen")
 		return err
-	} 
+	}
 
-	authInterceptor := auth.AuthInterceptor{Issuer: "lambda",Logger: l,
-	ServerPrefix: "/lambda.LambdaService/",
-	PublicMethods: []string{"ReceiveEvents"},
-	Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
+	authInterceptor := auth.AuthInterceptor{Issuer: "lambda", Logger: l,
+		ServerPrefix:  "/lambda.LambdaService/",
+		PublicMethods: []string{"ReceiveEvents"},
+		Mannager:      &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()),grpc.StreamInterceptor(authInterceptor.Stream()))
+	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()), grpc.StreamInterceptor(authInterceptor.Stream()))
 
-
-	d := docker.NewContainerDispatcher(3,&docker.DockerRuntime{})
+	d := docker.NewContainerDispatcher(3, &docker.DockerRuntime{})
 	d.Start()
-	
+
 	region = "us-east-1"
 	setRegion(region)
 
-	aws.RegisterLambdaServiceServer(s,&LambdaServer{
-		auth: &authInterceptor,
+	aws.RegisterLambdaServiceServer(s, &LambdaServer{
+		auth:   &authInterceptor,
 		logger: l,
-		db: db,
+		db:     db,
 		docker: d,
-		region: "us-east-1", 
+		region: "us-east-1",
 		LambdaExecutionManager: LambdaExecutionManager{
-			CapPerInvoque:10,
+			CapPerInvoque: 10,
 		},
 	})
 
 	reflection.Register(s)
 
+	l.Info().Str("server", "lambda").Msg("Staring lambda server on port :6002")
 
-	l.Info().Str("server","lambda").Msg("Staring lambda server on port :50051")
-
-	if err := s.Serve(lis); err !=nil {
-		l.Fatal().Msg(fmt.Sprint("Failed to serve %w",err))
+	if err := s.Serve(lis); err != nil {
+		l.Fatal().Msg(fmt.Sprint("Failed to serve %w", err))
 		return err
 	}
 
 	return nil
 }
-
-

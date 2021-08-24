@@ -37,6 +37,7 @@ type IAMServiceClient interface {
 	CreateAccessKeys(ctx context.Context, in *CreateAccessKeyRequest, opts ...grpc.CallOption) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(ctx context.Context, in *GetAccessKeysRequest, opts ...grpc.CallOption) (*GetAccessKeysResponse, error)
 	DeleteAccessKeys(ctx context.Context, in *DeleteAccessKeysRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// TODO: ApiGateway to communicate with a client.
 	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	RootUserLogin(ctx context.Context, in *RootUserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
@@ -271,6 +272,7 @@ type IAMServiceServer interface {
 	CreateAccessKeys(context.Context, *CreateAccessKeyRequest) (*CreateAccessKeysResponse, error)
 	GetAccessKeys(context.Context, *GetAccessKeysRequest) (*GetAccessKeysResponse, error)
 	DeleteAccessKeys(context.Context, *DeleteAccessKeysRequest) (*emptypb.Empty, error)
+	// TODO: ApiGateway to communicate with a client.
 	UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error)
 	RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)

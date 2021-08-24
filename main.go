@@ -17,6 +17,8 @@ var (
 
 )
 
+// TODO: create a flags to run services and nested flags, could user cobra or bare golang flag package.
+
 func main() {
 	flag.Parse()
  

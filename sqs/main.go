@@ -34,77 +34,64 @@ func (s *SQSServer) Error(err error, code codes.Code, msg string) error {
 	return grpc.Errorf(code, msg)
 }
 
-
 type SQSServer struct {
 	// aws.UnimplementedSQSServiceServer
-	auth *auth.AuthInterceptor 
+	auth   *auth.AuthInterceptor
 	logger zerolog.Logger
-	db *gorm.DB
- }
-
-
-
+	db     *gorm.DB
+}
 
 func authConfig() *auth.AuthInterceptor {
-	 m := auth.NewJWTMannager("mysecret",time.Hour)
-	 return auth.NewAuthInterceptor(m,"sqs")
+	m := auth.NewJWTMannager("mysecret", time.Hour)
+	return auth.NewAuthInterceptor(m, "sqs")
 }
 
 // TODO: migrate from rest api to gRPC
 func Run(l zerolog.Logger) error {
 
+	db, err := database.New()
 
-	db,err := database.New()
-
-	if err !=nil {
-		err = fmt.Errorf("Failed to connect database: %w",err)
+	if err != nil {
+		err = fmt.Errorf("Failed to connect database: %w", err)
 		l.Fatal().Err(err).Msg("Filed to connect the database")
 		return err
 	}
 
-	l.Info().Str("name",db.Dialector.Name()).Str("database",db.Debug().Name()).Msg("Succeeded to connect to the database")
-	
-	 database.NewRedis() 
+	l.Info().Str("name", db.Dialector.Name()).Str("database", db.Debug().Name()).Msg("Succeeded to connect to the database")
+
+	database.NewRedis()
 
 	db.AutoMigrate(&model.Queue{},
-		&model.User{},&model.Message{})
+		&model.User{}, &model.Message{})
 	// db.AutoMigrate(db)
 
+	lis, err := net.Listen("tcp", ":6001")
 
-	lis,err := net.Listen("tcp",":50051")
-
-	if err !=nil { 
-		l.Err(err).Str("listener",lis.Addr().String()).Msg("Unable to listen")
+	if err != nil {
+		l.Err(err).Str("listener", "Err").Msg("Unable to listen")
 		return err
 	}
- 
- 
-	authInterceptor := auth.AuthInterceptor{Issuer: "iam", Logger: l,
-	ServerPrefix: "/iam.SQSService/",
-	PublicMethods: []string{},
-		Mannager: &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
- 
-	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()),grpc.StreamInterceptor(authInterceptor.Stream()))
 
-	aws.RegisterSQSServiceServer(s,&SQSServer{
-		auth: &authInterceptor,
-		db: db,
+	authInterceptor := auth.AuthInterceptor{Issuer: "iam", Logger: l,
+		ServerPrefix:  "/iam.SQSService/",
+		PublicMethods: []string{},
+		Mannager:      &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
+
+	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()), grpc.StreamInterceptor(authInterceptor.Stream()))
+
+	aws.RegisterSQSServiceServer(s, &SQSServer{
+		auth:   &authInterceptor,
+		db:     db,
 		logger: l,
 	})
-	
+
 	reflection.Register(s)
-	
 
-	l.Info().Str("server","sqs").Msg("Staring server on port :50051")
+	l.Info().Str("server", "sqs").Msg("Staring server on port :6001")
 
-	if err := s.Serve(lis); err !=nil { 
-		l.Fatal().Msg(fmt.Sprint("Failed to serve %w",err))
+	if err := s.Serve(lis); err != nil {
+		l.Fatal().Msg(fmt.Sprint("Failed to serve %w", err))
 	}
 
 	return nil
 }
-
-
-
-
-

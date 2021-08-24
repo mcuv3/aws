@@ -13,20 +13,22 @@ services:
     build: .
     container_name: sqs
     ports:
-      - "6001:50051"
+      - "6001:6001"
+      - "7001:7001"
     env_file: ./env/sqs.env
     volumes:
-      - .:/app
+      - ./sqs:/app
     depends_on:
       - sqs-db
   iam:
     build: .
     container_name: iam
     ports:
-      - "6002:50051"
+      - "6000:6000"
+      - "7000:7000"
     env_file: ./env/iam.env
     volumes:
-      - .:/app
+      - ./iam:/app
     depends_on:
       - iam-db
 
@@ -34,12 +36,13 @@ services:
     build: .
     container_name: lambda
     ports:
-      - "6003:50051"
+      - "6002:6002"
+      - "7002:7002"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     env_file: ./env/lambda.env
     volumes:
-      - .:/app
+      - ./lambda:/app
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - lambda-db

@@ -21,6 +21,8 @@ import (
 type DockerRuntime struct{}
 
 
+// TODO: clean code implementation to be more sustenible
+
 
 func (d *DockerRuntime) BuildImage(options BuildImageOptions) error {
 	ctx := context.Background()

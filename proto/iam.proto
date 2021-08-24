@@ -7,7 +7,7 @@ import "google/protobuf/empty.proto";
 
 option go_package = "./;aws";
 
-
+// FIXME  implement all this escenarios
 
 service IAMService { 
     rpc CreatePolicy(CreatePolicyRequest) returns (CreatePolicyResponse);
@@ -34,6 +34,7 @@ service IAMService {
     rpc GetAccessKeys(GetAccessKeysRequest) returns (GetAccessKeysResponse);
     rpc DeleteAccessKeys(DeleteAccessKeysRequest) returns (google.protobuf.Empty);
 
+    // TODO: ApiGateway to communicate with a client.
     rpc UserLogin(UserLoginRequest) returns (LoginResponse);
     rpc RootUserLogin(RootUserLoginRequest) returns (LoginResponse);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);

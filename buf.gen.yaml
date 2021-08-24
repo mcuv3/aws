@@ -24,3 +24,18 @@ plugins:
   - name: ts
     out: lambda/prebuild/nodejs/src/gen
     opt: grpc_js
+
+  - name: ts
+    out: web/src/gen
+    opt:
+      - service=grpc-web:./web/src/gen
+      - js_out=import_style=commonjs,binary:./web/src/gen
+
+  # - name: js
+  #   out: web/src/gen
+  #   opt: import_style=commonjs,binary
+
+  # - name: grpc
+  #   out: web/src/gen
+  #   opt: grpc_js
+  #   path: grpc_tools_node_protoc_plugin
