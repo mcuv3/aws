@@ -1,0 +1,313 @@
+// package: sqs
+// file: sqs.proto
+
+import * as jspb from "google-protobuf";
+
+export class Message extends jspb.Message {
+  getId(): string;
+  setId(value: string): void;
+
+  getMessage(): string;
+  setMessage(value: string): void;
+
+  getQueueName(): string;
+  setQueueName(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Message.AsObject;
+  static toObject(includeInstance: boolean, msg: Message): Message.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: Message, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Message;
+  static deserializeBinaryFromReader(message: Message, reader: jspb.BinaryReader): Message;
+}
+
+export namespace Message {
+  export type AsObject = {
+    id: string,
+    message: string,
+    queueName: string,
+  }
+}
+
+export class Queue extends jspb.Message {
+  getName(): string;
+  setName(value: string): void;
+
+  getArn(): string;
+  setArn(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): Queue.AsObject;
+  static toObject(includeInstance: boolean, msg: Queue): Queue.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: Queue, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): Queue;
+  static deserializeBinaryFromReader(message: Queue, reader: jspb.BinaryReader): Queue;
+}
+
+export namespace Queue {
+  export type AsObject = {
+    name: string,
+    arn: string,
+  }
+}
+
+export class ConfigurationQueue extends jspb.Message {
+  getVisibilitytimeout(): number;
+  setVisibilitytimeout(value: number): void;
+
+  getVisibilitytime(): TimeMap[keyof TimeMap];
+  setVisibilitytime(value: TimeMap[keyof TimeMap]): void;
+
+  getMessageretention(): number;
+  setMessageretention(value: number): void;
+
+  getMessageretentiontime(): TimeMap[keyof TimeMap];
+  setMessageretentiontime(value: TimeMap[keyof TimeMap]): void;
+
+  getDeliverydelay(): number;
+  setDeliverydelay(value: number): void;
+
+  getDeliverydelaytime(): TimeMap[keyof TimeMap];
+  setDeliverydelaytime(value: TimeMap[keyof TimeMap]): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ConfigurationQueue.AsObject;
+  static toObject(includeInstance: boolean, msg: ConfigurationQueue): ConfigurationQueue.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ConfigurationQueue, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ConfigurationQueue;
+  static deserializeBinaryFromReader(message: ConfigurationQueue, reader: jspb.BinaryReader): ConfigurationQueue;
+}
+
+export namespace ConfigurationQueue {
+  export type AsObject = {
+    visibilitytimeout: number,
+    visibilitytime: TimeMap[keyof TimeMap],
+    messageretention: number,
+    messageretentiontime: TimeMap[keyof TimeMap],
+    deliverydelay: number,
+    deliverydelaytime: TimeMap[keyof TimeMap],
+  }
+}
+
+export class CreateQueueRequest extends jspb.Message {
+  getName(): string;
+  setName(value: string): void;
+
+  hasConf(): boolean;
+  clearConf(): void;
+  getConf(): ConfigurationQueue | undefined;
+  setConf(value?: ConfigurationQueue): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CreateQueueRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: CreateQueueRequest): CreateQueueRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: CreateQueueRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CreateQueueRequest;
+  static deserializeBinaryFromReader(message: CreateQueueRequest, reader: jspb.BinaryReader): CreateQueueRequest;
+}
+
+export namespace CreateQueueRequest {
+  export type AsObject = {
+    name: string,
+    conf?: ConfigurationQueue.AsObject,
+  }
+}
+
+export class CreateQueueResponse extends jspb.Message {
+  hasQueue(): boolean;
+  clearQueue(): void;
+  getQueue(): Queue | undefined;
+  setQueue(value?: Queue): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CreateQueueResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: CreateQueueResponse): CreateQueueResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: CreateQueueResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CreateQueueResponse;
+  static deserializeBinaryFromReader(message: CreateQueueResponse, reader: jspb.BinaryReader): CreateQueueResponse;
+}
+
+export namespace CreateQueueResponse {
+  export type AsObject = {
+    queue?: Queue.AsObject,
+  }
+}
+
+export class SendMessageRequest extends jspb.Message {
+  getQueueName(): string;
+  setQueueName(value: string): void;
+
+  getMessage(): string;
+  setMessage(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SendMessageRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: SendMessageRequest): SendMessageRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: SendMessageRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SendMessageRequest;
+  static deserializeBinaryFromReader(message: SendMessageRequest, reader: jspb.BinaryReader): SendMessageRequest;
+}
+
+export namespace SendMessageRequest {
+  export type AsObject = {
+    queueName: string,
+    message: string,
+  }
+}
+
+export class SendMessageResponse extends jspb.Message {
+  hasMessage(): boolean;
+  clearMessage(): void;
+  getMessage(): Message | undefined;
+  setMessage(value?: Message): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): SendMessageResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: SendMessageResponse): SendMessageResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: SendMessageResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): SendMessageResponse;
+  static deserializeBinaryFromReader(message: SendMessageResponse, reader: jspb.BinaryReader): SendMessageResponse;
+}
+
+export namespace SendMessageResponse {
+  export type AsObject = {
+    message?: Message.AsObject,
+  }
+}
+
+export class ReceiveMessageRequest extends jspb.Message {
+  getQueueName(): string;
+  setQueueName(value: string): void;
+
+  getBatchLimit(): number;
+  setBatchLimit(value: number): void;
+
+  getWaitLimit(): number;
+  setWaitLimit(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ReceiveMessageRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ReceiveMessageRequest): ReceiveMessageRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ReceiveMessageRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ReceiveMessageRequest;
+  static deserializeBinaryFromReader(message: ReceiveMessageRequest, reader: jspb.BinaryReader): ReceiveMessageRequest;
+}
+
+export namespace ReceiveMessageRequest {
+  export type AsObject = {
+    queueName: string,
+    batchLimit: number,
+    waitLimit: number,
+  }
+}
+
+export class ReceiveMessageResponse extends jspb.Message {
+  hasMessage(): boolean;
+  clearMessage(): void;
+  getMessage(): Message | undefined;
+  setMessage(value?: Message): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ReceiveMessageResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ReceiveMessageResponse): ReceiveMessageResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: ReceiveMessageResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ReceiveMessageResponse;
+  static deserializeBinaryFromReader(message: ReceiveMessageResponse, reader: jspb.BinaryReader): ReceiveMessageResponse;
+}
+
+export namespace ReceiveMessageResponse {
+  export type AsObject = {
+    message?: Message.AsObject,
+  }
+}
+
+export class DeleteMessageRequest extends jspb.Message {
+  getQueueName(): string;
+  setQueueName(value: string): void;
+
+  getMessageId(): string;
+  setMessageId(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteMessageRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteMessageRequest): DeleteMessageRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DeleteMessageRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteMessageRequest;
+  static deserializeBinaryFromReader(message: DeleteMessageRequest, reader: jspb.BinaryReader): DeleteMessageRequest;
+}
+
+export namespace DeleteMessageRequest {
+  export type AsObject = {
+    queueName: string,
+    messageId: string,
+  }
+}
+
+export class DeleteResponse extends jspb.Message {
+  getMessage(): string;
+  setMessage(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteResponse): DeleteResponse.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DeleteResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteResponse;
+  static deserializeBinaryFromReader(message: DeleteResponse, reader: jspb.BinaryReader): DeleteResponse;
+}
+
+export namespace DeleteResponse {
+  export type AsObject = {
+    message: string,
+  }
+}
+
+export class DeleteQueueRequest extends jspb.Message {
+  getQueueName(): string;
+  setQueueName(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): DeleteQueueRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: DeleteQueueRequest): DeleteQueueRequest.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: DeleteQueueRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): DeleteQueueRequest;
+  static deserializeBinaryFromReader(message: DeleteQueueRequest, reader: jspb.BinaryReader): DeleteQueueRequest;
+}
+
+export namespace DeleteQueueRequest {
+  export type AsObject = {
+    queueName: string,
+  }
+}
+
+export interface TimeMap {
+  SECOND: 0;
+  MINUTE: 1;
+  HOUR: 2;
+}
+
+export const Time: TimeMap;
+
