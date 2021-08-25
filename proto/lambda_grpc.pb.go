@@ -24,6 +24,7 @@ type LambdaServiceClient interface {
 	SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error)
 	ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error)
 	UpdateLambda(ctx context.Context, in *UpdateLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
+	DeleteLambda(ctx context.Context, in *DeleteLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 }
 
 type lambdaServiceClient struct {
@@ -111,6 +112,15 @@ func (c *lambdaServiceClient) UpdateLambda(ctx context.Context, in *UpdateLambda
 	return out, nil
 }
 
+func (c *lambdaServiceClient) DeleteLambda(ctx context.Context, in *DeleteLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error) {
+	out := new(LambdaResponse)
+	err := c.cc.Invoke(ctx, "/lambda.LambdaService/DeleteLambda", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // LambdaServiceServer is the server API for LambdaService service.
 // All implementations should embed UnimplementedLambdaServiceServer
 // for forward compatibility
@@ -121,6 +131,7 @@ type LambdaServiceServer interface {
 	SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error)
 	ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error
 	UpdateLambda(context.Context, *UpdateLambdaRequest) (*LambdaResponse, error)
+	DeleteLambda(context.Context, *DeleteLambdaRequest) (*LambdaResponse, error)
 }
 
 // UnimplementedLambdaServiceServer should be embedded to have forward compatible implementations.
@@ -144,6 +155,9 @@ func (UnimplementedLambdaServiceServer) ReceiveEvents(*ReceiveEventRequest, Lamb
 }
 func (UnimplementedLambdaServiceServer) UpdateLambda(context.Context, *UpdateLambdaRequest) (*LambdaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateLambda not implemented")
+}
+func (UnimplementedLambdaServiceServer) DeleteLambda(context.Context, *DeleteLambdaRequest) (*LambdaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteLambda not implemented")
 }
 
 // UnsafeLambdaServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -268,6 +282,24 @@ func _LambdaService_UpdateLambda_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _LambdaService_DeleteLambda_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteLambdaRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(LambdaServiceServer).DeleteLambda(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/lambda.LambdaService/DeleteLambda",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(LambdaServiceServer).DeleteLambda(ctx, req.(*DeleteLambdaRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _LambdaService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "lambda.LambdaService",
 	HandlerType: (*LambdaServiceServer)(nil),
@@ -291,6 +323,10 @@ var _LambdaService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateLambda",
 			Handler:    _LambdaService_UpdateLambda_Handler,
+		},
+		{
+			MethodName: "DeleteLambda",
+			Handler:    _LambdaService_DeleteLambda_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

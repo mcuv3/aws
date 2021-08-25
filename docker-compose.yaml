@@ -10,31 +10,36 @@ x-db: &defaults-db
 
 services:
   sqs:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile.service
     container_name: sqs
     ports:
       - "6001:6001"
       - "7001:7001"
     env_file: ./env/sqs.env
     volumes:
-      - ./sqs:/app
+      - .:/app
     depends_on:
       - sqs-db
   iam:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile.service
     container_name: iam
     ports:
       - "6000:6000"
       - "7000:7000"
     env_file: ./env/iam.env
     volumes:
-      - ./iam:/app
+      - .:/app
     depends_on:
       - iam-db
 
   lambda:
-    build: .
-    container_name: lambda
+    build: 
+      context: .
+      dockerfile: Dockerfile.service
     ports:
       - "6002:6002"
       - "7002:7002"
@@ -42,7 +47,7 @@ services:
       - "host.docker.internal:host-gateway"
     env_file: ./env/lambda.env
     volumes:
-      - ./lambda:/app
+      - .:/app
       - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - lambda-db

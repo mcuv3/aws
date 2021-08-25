@@ -1,0 +1,7 @@
+FROM mcuve/aws-base:latest
+
+EXPOSE 50051
+
+ENV SECRET=supersecret
+
+CMD [ "./air" ]

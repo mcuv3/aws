@@ -34,7 +34,6 @@ service IAMService {
     rpc GetAccessKeys(GetAccessKeysRequest) returns (GetAccessKeysResponse);
     rpc DeleteAccessKeys(DeleteAccessKeysRequest) returns (google.protobuf.Empty);
 
-    // TODO: ApiGateway to communicate with a client.
     rpc UserLogin(UserLoginRequest) returns (LoginResponse);
     rpc RootUserLogin(RootUserLoginRequest) returns (LoginResponse);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);

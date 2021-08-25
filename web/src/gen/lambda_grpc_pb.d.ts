@@ -15,6 +15,7 @@ interface ILambdaServiceService extends grpc.ServiceDefinition<grpc.UntypedServi
     seedLambdaServer: ILambdaServiceService_ISeedLambdaServer;
     receiveEvents: ILambdaServiceService_IReceiveEvents;
     updateLambda: ILambdaServiceService_IUpdateLambda;
+    deleteLambda: ILambdaServiceService_IDeleteLambda;
 }
 
 interface ILambdaServiceService_ICreateFunction extends grpc.MethodDefinition<lambda_pb.CreateFunctionRequest, lambda_pb.LambdaResponse> {
@@ -71,6 +72,15 @@ interface ILambdaServiceService_IUpdateLambda extends grpc.MethodDefinition<lamb
     responseSerialize: grpc.serialize<lambda_pb.LambdaResponse>;
     responseDeserialize: grpc.deserialize<lambda_pb.LambdaResponse>;
 }
+interface ILambdaServiceService_IDeleteLambda extends grpc.MethodDefinition<lambda_pb.DeleteLambdaRequest, lambda_pb.LambdaResponse> {
+    path: "/lambda.LambdaService/DeleteLambda";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<lambda_pb.DeleteLambdaRequest>;
+    requestDeserialize: grpc.deserialize<lambda_pb.DeleteLambdaRequest>;
+    responseSerialize: grpc.serialize<lambda_pb.LambdaResponse>;
+    responseDeserialize: grpc.deserialize<lambda_pb.LambdaResponse>;
+}
 
 export const LambdaServiceService: ILambdaServiceService;
 
@@ -81,6 +91,7 @@ export interface ILambdaServiceServer {
     seedLambdaServer: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, lambda_pb.LambdaResponse>;
     receiveEvents: grpc.handleServerStreamingCall<lambda_pb.ReceiveEventRequest, lambda_pb.EventResponse>;
     updateLambda: grpc.handleUnaryCall<lambda_pb.UpdateLambdaRequest, lambda_pb.LambdaResponse>;
+    deleteLambda: grpc.handleUnaryCall<lambda_pb.DeleteLambdaRequest, lambda_pb.LambdaResponse>;
 }
 
 export interface ILambdaServiceClient {
@@ -101,6 +112,9 @@ export interface ILambdaServiceClient {
     updateLambda(request: lambda_pb.UpdateLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    deleteLambda(request: lambda_pb.DeleteLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    deleteLambda(request: lambda_pb.DeleteLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    deleteLambda(request: lambda_pb.DeleteLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
 }
 
 export class LambdaServiceClient extends grpc.Client implements ILambdaServiceClient {
@@ -122,4 +136,7 @@ export class LambdaServiceClient extends grpc.Client implements ILambdaServiceCl
     public updateLambda(request: lambda_pb.UpdateLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     public updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
     public updateLambda(request: lambda_pb.UpdateLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    public deleteLambda(request: lambda_pb.DeleteLambdaRequest, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    public deleteLambda(request: lambda_pb.DeleteLambdaRequest, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
+    public deleteLambda(request: lambda_pb.DeleteLambdaRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: lambda_pb.LambdaResponse) => void): grpc.ClientUnaryCall;
 }

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
+	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
@@ -46,8 +47,7 @@ func authConfig() *auth.AuthInterceptor {
 	return auth.NewAuthInterceptor(m, "sqs")
 }
 
-// TODO: migrate from rest api to gRPC
-func Run(l zerolog.Logger) error {
+func Run(cmd cli.SqsCmd, l zerolog.Logger) error {
 
 	db, err := database.New()
 
