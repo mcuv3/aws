@@ -6,7 +6,7 @@ import (
 )
 
 func Parse(args []string) (*Command, error) {
-	if len(args) < 1 {
+	if len(args) < 2 {
 		return nil, errors.New("You need to specify a service (sqs,iam,lambda)")
 	}
 

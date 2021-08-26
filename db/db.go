@@ -44,9 +44,16 @@ func dsn() (string, error) {
 	return fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s sslmode=%s", vars[0], vars[1], vars[2], vars[3], vars[4], vars[5]), nil
 }
 
-func New() (*gorm.DB, error) {
+func New(conn string) (*gorm.DB, error) {
 
-	s, err := dsn()
+	var sqlConn string
+	var err error
+
+	if conn != "" {
+		sqlConn = conn
+	} else {
+		sqlConn, err = dsn()
+	}
 
 	if err != nil {
 		return nil, err
@@ -56,7 +63,7 @@ func New() (*gorm.DB, error) {
 
 	for i := 0; i < 10; i++ {
 		database, err = gorm.Open(postgres.New(postgres.Config{
-			DSN:        s,
+			DSN: sqlConn,
 		}))
 		if err == nil {
 			break

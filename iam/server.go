@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
+	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
@@ -26,7 +27,7 @@ type IAMService struct {
 	logger  zerolog.Logger
 }
 
-func Run(logger zerolog.Logger) error {
+func Run(cmd cli.IamCmd, logger zerolog.Logger) error {
 
 	lis, err := net.Listen("tcp", ":6000")
 
@@ -34,7 +35,7 @@ func Run(logger zerolog.Logger) error {
 		return err
 	}
 
-	db, err := database.New()
+	db, err := database.New(cmd.DbUrl)
 
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Unable to connect to the database.")

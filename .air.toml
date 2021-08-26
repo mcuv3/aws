@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "logs"
 
 [build]
-  bin = "./tmp/main --svc $SERVICE"
+  bin = "./tmp/main $SERVICE --secret=$SECRET"
   cmd = "go build -o ./tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor","docs"]

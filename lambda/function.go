@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (l *LambdaServer) CreateFunction(ctx context.Context, req *aws.CreateFunctionRequest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunctionRequest) (*aws.LambdaResponse, error) {
 	us, err := l.auth.GetUserMetadata(ctx)
 	if err != nil {
 		return nil, grpc.Errorf(codes.Unauthenticated, "Unable to authenticate in lambda.")
@@ -73,7 +73,7 @@ func (l *LambdaServer) CreateFunction(ctx context.Context, req *aws.CreateFuncti
 	return &aws.LambdaResponse{Message: "Successfully function created", Ok: true}, nil
 }
 
-func (l *LambdaServer) TestFunction(ctx context.Context, req *aws.TestFunctionResquest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionResquest) (*aws.LambdaResponse, error) {
 
 	us, err := l.auth.GetUserMetadata(ctx)
 
@@ -109,7 +109,7 @@ func (l *LambdaServer) TestFunction(ctx context.Context, req *aws.TestFunctionRe
 	}, nil
 }
 
-func (l *LambdaServer) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunctionRequest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunctionRequest) (*aws.LambdaResponse, error) {
 
 	res := model.Function{}
 
@@ -154,7 +154,7 @@ func (l *LambdaServer) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunc
 	}, nil
 }
 
-func (l *LambdaServer) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.LambdaService_ReceiveEventsServer) error {
+func (l *LambdaService) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.LambdaService_ReceiveEventsServer) error {
 
 	execution := l.LambdaExecutionManager.getExecution(req.GetHash())
 
@@ -192,7 +192,7 @@ broker:
 	return nil
 }
 
-func (l *LambdaServer) UpdateLambda(ctx context.Context, req *aws.UpdateLambdaRequest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) UpdateLambda(ctx context.Context, req *aws.UpdateLambdaRequest) (*aws.LambdaResponse, error) {
 
 	lambda := model.Function{}
 
@@ -225,7 +225,7 @@ func (l *LambdaServer) UpdateLambda(ctx context.Context, req *aws.UpdateLambdaRe
 	}, nil
 }
 
-func (l *LambdaServer) DeleteLambda(ctx context.Context, req *aws.DeleteLambdaRequest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) DeleteLambda(ctx context.Context, req *aws.DeleteLambdaRequest) (*aws.LambdaResponse, error) {
 	lambda := model.Function{}
 
 	tx := l.db.Where("arn = ?", req.GetArn()).First(&lambda)

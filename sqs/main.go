@@ -49,7 +49,7 @@ func authConfig() *auth.AuthInterceptor {
 
 func Run(cmd cli.SqsCmd, l zerolog.Logger) error {
 
-	db, err := database.New()
+	db, err := database.New(cmd.DbUrl)
 
 	if err != nil {
 		err = fmt.Errorf("Failed to connect database: %w", err)
