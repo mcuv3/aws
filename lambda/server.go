@@ -1,8 +1,11 @@
 package lambda
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"net"
+	"net/http"
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
@@ -25,6 +28,8 @@ type LambdaService struct {
 	db            *gorm.DB
 	region        string
 	CapPerInvoque int
+	grpc          *grpc.Server
+	grpcweb       http.Server
 	LambdaExecutionManager
 }
 
@@ -35,40 +40,44 @@ func Run(cmd cli.LambdaCmd, l zerolog.Logger) error {
 		l.Fatal().Err(err).Msg("Filed to connect the database")
 		return err
 	}
-	db.AutoMigrate(&model.Runtime{})
-	db.AutoMigrate(&model.Function{})
+	runMigrations(db)
 
 	l.Info().Str("name", db.Dialector.Name()).Msgf("databse %s", db.Debug().Name())
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", cmd.PortGrpc))
-	if err != nil {
-		l.Err(err).Str("listener", lis.Addr().String()).Msg("Failed to listen")
-		return err
+	service := newLambdaService(cmd, db)
+	service.RegisterGRPC()
+
+	if cmd.EnableGrpc && cmd.EnableWeb {
+		go service.ServeGrpc(cmd.PortGrpc, cmd.Name())
+		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
 
-	service, s := newLambdaService(cmd, db)
-	aws.RegisterLambdaServiceServer(s, &service)
-	reflection.Register(s)
-
-	l.Info().Str("service", "lambda").Msgf("Staring lambda service on port :%s", cmd.PortGrpc)
-
-	if err := s.Serve(lis); err != nil {
-		l.Fatal().Msg(fmt.Sprint("Failed to serve %w", err))
-		return err
+	if cmd.EnableGrpc {
+		return service.ServeGrpc(cmd.PortGrpc, cmd.Name())
 	}
 
-	return nil
+	if cmd.EnableWeb {
+		return service.ServeWeb(cmd.PortWeb, cmd.Name())
+	}
+
+	return errors.New("Enable either web or grpc or both.")
 }
 
-func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) (LambdaService, *grpc.Server) {
+func runMigrations(db *gorm.DB) {
+	db.AutoMigrate(&model.Runtime{})
+	db.AutoMigrate(&model.Function{})
+}
+
+func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 	l := helpers.NewLogger()
 
-	server := LambdaService{
+	service := LambdaService{
 		auth: &auth.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
 			ServerPrefix:  "/lambda.LambdaService/",
 			PublicMethods: []string{"ReceiveEvents"},
 			Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}},
 		logger: l,
+
 		db:     db,
 		docker: docker.NewContainerDispatcher(cmd.Workers, &docker.DockerRuntime{}),
 		region: cmd.Region,
@@ -76,12 +85,49 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) (LambdaService, *grpc.Serv
 			CapPerInvoque: 10,
 		},
 	}
+
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(server.auth.Unary()),
-		grpc.StreamInterceptor(server.auth.Stream()))
+		grpc.UnaryInterceptor(service.auth.Unary()),
+		grpc.StreamInterceptor(service.auth.Stream()))
+	service.grpc = s
+	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
+	service.grpcweb = *grpcweb
 
-	server.setRuntimes()
-	server.docker.Start()
+	service.setRuntimes()
+	service.docker.Start()
 
-	return server, s
+	return service
+}
+
+func (s *LambdaService) RegisterGRPC() {
+	aws.RegisterLambdaServiceServer(s.grpc, s)
+	reflection.Register(s.grpc)
+}
+
+func (s *LambdaService) ServeGrpc(port string, serviceName string) error {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info().Str("grpc", serviceName).Msgf("Staring gRPC server on port :%s", port)
+
+	if err := s.grpc.Serve(lis); err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *LambdaService) ServeWeb(port string, serviceName string) error {
+	s.logger.Info().Str("web", serviceName).Msgf("Staring web server on port :%s", port)
+
+	if err := s.grpcweb.ListenAndServe(); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return nil
 }

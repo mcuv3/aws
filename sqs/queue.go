@@ -12,64 +12,58 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-func (s *SQSServer) CreateQueue(ctx context.Context,req * aws.CreateQueueRequest) (*aws.CreateQueueResponse,error){ 
-	queueName := req.GetName();
+func (s *SQSService) CreateQueue(ctx context.Context, req *aws.CreateQueueRequest) (*aws.CreateQueueResponse, error) {
+	queueName := req.GetName()
 
-	us ,err := s.auth.GetUserMetadata(ctx)
+	us, err := s.auth.GetUserMetadata(ctx)
 
-	if err !=nil { 
-		return nil,s.Error(err,codes.Unauthenticated,"Unable to authenticate")
+	if err != nil {
+		return nil, s.Error(err, codes.Unauthenticated, "Unable to authenticate")
 	}
 
- 
-	if res := s.db.Where("account_id = ? AND name =  ?", us.AccountId,queueName).First(&model.Queue{}); res.Error == nil  {
-		return nil,grpc.Errorf(codes.NotFound,"Something went wrong %s",queueName)
+	if res := s.db.Where("account_id = ? AND name =  ?", us.AccountId, queueName).First(&model.Queue{}); res.Error == nil {
+		return nil, grpc.Errorf(codes.NotFound, "Something went wrong %s", queueName)
 	}
 
 	conf := req.GetConf()
 
-	
 	if string(conf.DeliveryDelayTime) == "" || string(conf.MessageRetentionTime) == "" || string(conf.VisibilityTime) == "" {
-		return nil,s.Error(errors.New("Invalid configuration"),codes.InvalidArgument,"Invalid configuration please check.")
+		return nil, s.Error(errors.New("Invalid configuration"), codes.InvalidArgument, "Invalid configuration please check.")
 	}
 
-
-	arn, err := auth.NewArn(auth.SQS,auth.US_EAST_1,us.AccountId,fmt.Sprintf("/queue/%s",queueName))
+	arn, err := auth.NewArn(auth.SQS, auth.US_EAST_1, us.AccountId, fmt.Sprintf("/queue/%s", queueName))
 
 	if err != nil {
-		return nil,s.Error(err,codes.InvalidArgument,"Invalid ARN")
+		return nil, s.Error(err, codes.InvalidArgument, "Invalid ARN")
 	}
-
 
 	queue := model.Queue{
-		Name:          queueName, 
-		AccountId:     us.AccountId,
-		Arn: arn.String(),
+		Name:      queueName,
+		AccountId: us.AccountId,
+		Arn:       arn.String(),
 		Configuration: model.ConfigurationQueue{
 			MessageRetentionTime: conf.MessageRetentionTime.String(),
-			VisibilityTimeout: int(conf.VisibilityTimeout),
-			VisibilityTime: conf.VisibilityTime.String(),
-			MessageRetention: int(conf.MessageRetention),
-			DeliveryDelay: int(conf.DeliveryDelayTime),
-			DeliveryDelayTime: conf.DeliveryDelayTime.String(),
+			VisibilityTimeout:    int(conf.VisibilityTimeout),
+			VisibilityTime:       conf.VisibilityTime.String(),
+			MessageRetention:     int(conf.MessageRetention),
+			DeliveryDelay:        int(conf.DeliveryDelayTime),
+			DeliveryDelayTime:    conf.DeliveryDelayTime.String(),
 		},
 	}
-
 
 	res := s.db.Create(&queue)
 
 	if res.Error != nil {
-		return nil,s.Error(res.Error,codes.Aborted,"Couldn't create queue.")
+		return nil, s.Error(res.Error, codes.Aborted, "Couldn't create queue.")
 	}
 
 	return &aws.CreateQueueResponse{Queue: &aws.Queue{
 		Name: queueName,
-		Arn: arn.String(),
-		}},nil
+		Arn:  arn.String(),
+	}}, nil
 }
 
+func (s *SQSService) DeleteQueue(ctx context.Context, req *aws.DeleteQueueRequest) (*aws.DeleteResponse, error) {
 
-func (s *SQSServer) DeleteQueue(ctx context.Context,req *aws.DeleteQueueRequest)(*aws.DeleteResponse,error) {
-
-	return nil,nil
+	return nil, nil
 }

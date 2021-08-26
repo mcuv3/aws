@@ -13,6 +13,8 @@ import (
 
 func main() {
 	// fastergoding.Run()
+	var err error
+
 	cmd, err := cli.Parse(os.Args)
 
 	if err != nil {
@@ -33,19 +35,23 @@ func main() {
 	switch svc {
 	case "sqs":
 		r := c.(*cli.SqsCmd)
-		if err := sqs.Run(*r, l); err != nil {
+		if err = sqs.Run(*r, l); err != nil {
 			l.Fatal().Msg("Unable to start sqs service.")
 		}
 		break
 	case "iam":
 		r := c.(*cli.IamCmd)
-		if err := iam.Run(*r, l); err != nil {
+		if err = iam.Run(*r, l); err != nil {
 			l.Fatal().Msg("Unable to start iam service.")
 		}
 	case "lambda":
 		r := c.(*cli.LambdaCmd)
-		if err := lambda.Run(*r, l); err != nil {
+		if err = lambda.Run(*r, l); err != nil {
 			l.Fatal().Msg("Unable to start lambda service.")
 		}
+	}
+
+	if err != nil {
+		fmt.Println(err)
 	}
 }

@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -10,9 +11,9 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
-	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -25,62 +26,35 @@ type IAMService struct {
 	storage *IamRepository
 	auth    *auth.AuthInterceptor
 	logger  zerolog.Logger
+	grpc    *grpc.Server
+	webgrpc http.Server
 }
 
 func Run(cmd cli.IamCmd, logger zerolog.Logger) error {
 
-	lis, err := net.Listen("tcp", ":6000")
-
-	if err != nil {
-		return err
-	}
-
 	db, err := database.New(cmd.DbUrl)
-
 	if err != nil {
 		logger.Fatal().Err(err).Msg("Unable to connect to the database.")
 	}
-
 	runMigrations(db)
 
-	authInt := auth.AuthInterceptor{Issuer: "iam", Logger: logger,
-		ServerPrefix:  "/iam.IAMService/",
-		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
-		Mannager:      &auth.JWTMannger{SecretKey: "supersecret", Duration: time.Hour}}
+	service := newIamService(cmd, db)
+	service.RegisterGRPC()
 
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary()))
-
-	aws.RegisterIAMServiceServer(s, &IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInt})
-
-	reflection.Register(s)
-
-	logger.Info().Str("server", "iam").Msg("Staring server on port :6000")
-
-	wrapped := grpcweb.WrapServer(s, grpcweb.WithOriginFunc(func(origin string) bool {
-		logger.Info().Str("origin", origin).Msg("Origin: " + origin)
-		return true
-	}))
-
-	handler := func(resp http.ResponseWriter, req *http.Request) {
-		wrapped.ServeHTTP(resp, req)
+	if cmd.EnableGrpc && cmd.EnableWeb {
+		go service.ServeGrpc(cmd.PortGrpc, cmd.Name())
+		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
 
-	httpsServer := http.Server{
-		Addr:    ":7000",
-		Handler: http.HandlerFunc(handler),
+	if cmd.EnableGrpc {
+		return service.ServeGrpc(cmd.PortGrpc, cmd.Name())
 	}
 
-	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Println(err)
-		}
-	}()
-
-	if err := httpsServer.ListenAndServe(); err != nil {
-		fmt.Println(err)
-		return nil
+	if cmd.EnableWeb {
+		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
-	return err
+
+	return errors.New("Enable either web or grpc or both.")
 }
 
 func (s *IAMService) Error(err error, code codes.Code, msg string) error {
@@ -90,4 +64,51 @@ func (s *IAMService) Error(err error, code codes.Code, msg string) error {
 
 func runMigrations(db *gorm.DB) {
 	db.AutoMigrate(model.RootUser{}, model.Group{}, model.Role{}, model.Policy{}, model.User{}, model.AccessKey{})
+}
+
+func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
+	logger := helpers.NewLogger()
+
+	authInt := auth.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
+		ServerPrefix:  "/iam.IAMService/",
+		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
+		Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}}
+
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary()))
+	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
+
+	return IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInt, grpc: s, webgrpc: *webgrpc}
+}
+
+func (s *IAMService) RegisterGRPC() {
+	aws.RegisterIAMServiceServer(s.grpc, s)
+	reflection.Register(s.grpc)
+}
+
+func (s *IAMService) ServeGrpc(port string, serviceName string) error {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+
+	if err != nil {
+		return err
+	}
+
+	s.logger.Info().Str("grpc", serviceName).Msgf("Staring gRPC server on port :%s", port)
+
+	if err := s.grpc.Serve(lis); err != nil {
+		log.Println(err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *IAMService) ServeWeb(port string, serviceName string) error {
+	s.logger.Info().Str("web", serviceName).Msgf("Staring web server on port :%s", port)
+
+	if err := s.webgrpc.ListenAndServe(); err != nil {
+		fmt.Println(err)
+		return nil
+	}
+
+	return nil
 }

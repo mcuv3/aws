@@ -12,13 +12,16 @@ type Command interface {
 }
 
 type SqsCmd struct {
-	PortGrpc string
-	PortWeb  string
-	Region   string
-	DbUrl    string
-	Secret   string
-	Help     bool
-	Fs       *flag.FlagSet
+	PortGrpc   string
+	PortWeb    string
+	EnableWeb  bool
+	EnableGrpc bool
+	Region     string
+	Origin     string
+	DbUrl      string
+	Secret     string
+	Help       bool
+	Fs         *flag.FlagSet
 }
 
 func newSqsCmd() *SqsCmd {
@@ -29,9 +32,12 @@ func newSqsCmd() *SqsCmd {
 
 	cmd.Fs.StringVar(&cmd.PortGrpc, "port-grpc", "6001", "port to listen on grpc")
 	cmd.Fs.StringVar(&cmd.PortWeb, "port-web", "7001", "port to listen on web browser")
+	cmd.Fs.BoolVar(&cmd.EnableGrpc, "enable-grpc", true, "port to listen on web browser")
+	cmd.Fs.BoolVar(&cmd.EnableWeb, "enable-web", true, "port to listen on web browser")
 	cmd.Fs.StringVar(&cmd.Region, "region", "us-east-1", "aws region [defualt=us-east-1]")
+	cmd.Fs.StringVar(&cmd.Origin, "origin", "http://localhost:3000", "allowed origin.")
 	cmd.Fs.StringVar(&cmd.DbUrl, "db", "", "database url")
-	cmd.Fs.StringVar(&cmd.Secret, "secret", "", "secret")
+	cmd.Fs.StringVar(&cmd.Secret, "secret", "", "jwt secret required")
 	cmd.Fs.BoolVar(&cmd.Help, "help", false, "show help of the command")
 
 	return cmd
@@ -58,6 +64,9 @@ type LambdaCmd struct {
 	PortGrpc         string
 	PortWeb          string
 	EventsPerInvoque int
+	Origin           string
+	EnableGrpc       bool
+	EnableWeb        bool
 	Region           string
 	Secret           string
 	Workers          int
@@ -76,6 +85,9 @@ func newLambdaCmd() *LambdaCmd {
 	cmd.Fs.StringVar(&cmd.PortWeb, "port-web", "7002", "port to listen on web browser")
 	cmd.Fs.IntVar(&cmd.EventsPerInvoque, "events-pre-invoque", 10, "number of concurrent events to process on a single lambda invocation")
 	cmd.Fs.StringVar(&cmd.Region, "region", "us-east-1", "aws region")
+	cmd.Fs.BoolVar(&cmd.EnableGrpc, "enable-grpc", true, "port to listen on web browser")
+	cmd.Fs.BoolVar(&cmd.EnableWeb, "enable-web", true, "port to listen on web browser")
+	cmd.Fs.StringVar(&cmd.Origin, "origin", "http://localhost:3000", "allowed origin.")
 	cmd.Fs.StringVar(&cmd.DbUrl, "db", "", "database url")
 	cmd.Fs.StringVar(&cmd.Secret, "secret", "", "jwt secret")
 	cmd.Fs.IntVar(&cmd.Workers, "workers", 3, "amount of workers to process lambdas")
@@ -104,7 +116,10 @@ func (c *LambdaCmd) Name() string {
 type IamCmd struct {
 	PortGrpc         string
 	PortWeb          string
+	EnableGrpc       bool
+	EnableWeb        bool
 	DbUrl            string
+	Origin           string
 	Region           string
 	Secret           string
 	Workers          int
@@ -121,6 +136,9 @@ func newIamCmd() *IamCmd {
 
 	cmd.Fs.StringVar(&cmd.PortGrpc, "port-grpc", "6000", "port to listen on gRPC")
 	cmd.Fs.StringVar(&cmd.PortWeb, "port-web", "7000", "port to listen on web browser")
+	cmd.Fs.StringVar(&cmd.Origin, "origin", "http://localhost:3000", "allowed origin.")
+	cmd.Fs.BoolVar(&cmd.EnableGrpc, "enable-grpc", true, "port to listen on web browser")
+	cmd.Fs.BoolVar(&cmd.EnableWeb, "enable-web", true, "port to listen on web browser")
 	cmd.Fs.StringVar(&cmd.Region, "region", "us-east-1", "aws region [defualt=us-east-1]")
 	cmd.Fs.StringVar(&cmd.DbUrl, "db", "", "database url")
 	cmd.Fs.StringVar(&cmd.Secret, "secret", "", "secret")
