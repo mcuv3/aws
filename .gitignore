@@ -3,4 +3,10 @@
 *service.d.ts
 *pb.js
 *service.js
-*pb.go
+*pb2_grpc.py
+*pb2.py
+
+
+maws
+app
+aws
