@@ -14,6 +14,7 @@ func Parse(args []string) (*Command, error) {
 		newSqsCmd(),
 		newLambdaCmd(),
 		newIamCmd(),
+		newEventBridgeCmd(),
 	}
 
 	service := os.Args[1]

@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package eventbridge;
+
+
+option go_package = "./;aws";
+
+
+message Event {
+    string id = 1;
+}
+
+enum Services {
+    Lambda = 0;
+    Sqs = 1;
+    Iam = 2;
+}
+
+message EventPattern {
+    Services service = 1;
+    string event_type = 2; // Create Queue, Delete User , Create Queue.
+}
+
+message ScheduleEvent  {
+    string cron = 1;
+}
+
+enum TargetType {
+    LambdaFuntion = 0;
+    SqsQueue = 1;
+     // ...  other services or implementations;
+}
+
+message Target {
+    TargetType target_type = 1;
+    string target_arn = 2;
+}
+
+message CreateRuleRequest {
+    string name = 1;
+    string description = 2;
+    oneof event {
+        EventPattern event_pattern = 3;
+        ScheduleEvent schedule_event = 4;
+    }
+    repeated Target targets = 5;
+}
+
+message CreateRuleResponse {
+    string rule_arn = 1;
+}
+
+message EventBridgeResponse {
+    string message = 1;
+    string status = 2;
+}
+
+message DeleteRuleRequest {
+    string name = 1;
+}
+
+message ChangeRuleStateRequest {
+    string name = 1;
+}
+
+service EventBridgeService {
+    rpc CreateRule(CreateRuleRequest) returns (CreateRuleResponse) {};
+    rpc UpdateRule(CreateRuleRequest) returns (EventBridgeResponse) {};
+    rpc DeleteRule(DeleteRuleRequest) returns (EventBridgeResponse) {};
+    rpc ChangeRuleState(ChangeRuleStateRequest) returns (EventBridgeResponse) {};
+}

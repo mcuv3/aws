@@ -16,6 +16,7 @@ require (
 	github.com/klauspost/compress v1.13.4 // indirect
 	github.com/lib/pq v1.6.0 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
+	github.com/robfig/cron/v3 v3.0.0 // indirect
 	github.com/rs/cors v1.8.0 // indirect
 	github.com/rs/zerolog v1.23.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a

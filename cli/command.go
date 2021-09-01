@@ -162,3 +162,53 @@ func (c *IamCmd) init(args []string) error {
 func (c *IamCmd) Name() string {
 	return "iam"
 }
+
+type EventBridgeCmd struct {
+	PortGrpc         string
+	PortWeb          string
+	EnableGrpc       bool
+	EnableWeb        bool
+	DbUrl            string
+	Origin           string
+	Region           string
+	Secret           string
+	Workers          int
+	ContainerRuntime string
+	Help             bool
+	Fs               *flag.FlagSet
+}
+
+func newEventBridgeCmd() *EventBridgeCmd {
+
+	cmd := &EventBridgeCmd{
+		Fs: flag.NewFlagSet("eventbridge", flag.ExitOnError),
+	}
+
+	cmd.Fs.StringVar(&cmd.PortGrpc, "port-grpc", "6003", "port to listen on gRPC")
+	cmd.Fs.StringVar(&cmd.PortWeb, "port-web", "7003", "port to listen on web browser")
+	cmd.Fs.StringVar(&cmd.Origin, "origin", "http://localhost:3000", "allowed origin.")
+	cmd.Fs.BoolVar(&cmd.EnableGrpc, "enable-grpc", true, "port to listen on web browser")
+	cmd.Fs.BoolVar(&cmd.EnableWeb, "enable-web", true, "port to listen on web browser")
+	cmd.Fs.StringVar(&cmd.Region, "region", "us-east-1", "aws region [defualt=us-east-1]")
+	cmd.Fs.StringVar(&cmd.DbUrl, "db", "", "database url")
+	cmd.Fs.StringVar(&cmd.Secret, "secret", "", "secret")
+	cmd.Fs.BoolVar(&cmd.Help, "help", false, "show help of the command")
+
+	return cmd
+}
+
+func (c *EventBridgeCmd) GetHelp() bool {
+	return c.Help
+}
+
+func (c *EventBridgeCmd) Usage() {
+	c.Fs.Usage()
+}
+
+func (c *EventBridgeCmd) init(args []string) error {
+	return c.Fs.Parse(args)
+}
+
+func (c *EventBridgeCmd) Name() string {
+	return "eventbridge"
+}
