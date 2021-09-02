@@ -20,7 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 type LambdaServiceClient interface {
 	CreateFunction(ctx context.Context, in *CreateFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	TestFunction(ctx context.Context, in *TestFunctionResquest, opts ...grpc.CallOption) (*LambdaResponse, error)
-	InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
+	InvokeFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
 	SeedLambdaServer(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*LambdaResponse, error)
 	ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error)
 	UpdateLambda(ctx context.Context, in *UpdateLambdaRequest, opts ...grpc.CallOption) (*LambdaResponse, error)
@@ -53,9 +53,9 @@ func (c *lambdaServiceClient) TestFunction(ctx context.Context, in *TestFunction
 	return out, nil
 }
 
-func (c *lambdaServiceClient) InvoqueFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error) {
+func (c *lambdaServiceClient) InvokeFunction(ctx context.Context, in *InvoqueFunctionRequest, opts ...grpc.CallOption) (*LambdaResponse, error) {
 	out := new(LambdaResponse)
-	err := c.cc.Invoke(ctx, "/lambda.LambdaService/InvoqueFunction", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/lambda.LambdaService/InvokeFunction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (c *lambdaServiceClient) DeleteLambda(ctx context.Context, in *DeleteLambda
 type LambdaServiceServer interface {
 	CreateFunction(context.Context, *CreateFunctionRequest) (*LambdaResponse, error)
 	TestFunction(context.Context, *TestFunctionResquest) (*LambdaResponse, error)
-	InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error)
+	InvokeFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error)
 	SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error)
 	ReceiveEvents(*ReceiveEventRequest, LambdaService_ReceiveEventsServer) error
 	UpdateLambda(context.Context, *UpdateLambdaRequest) (*LambdaResponse, error)
@@ -144,8 +144,8 @@ func (UnimplementedLambdaServiceServer) CreateFunction(context.Context, *CreateF
 func (UnimplementedLambdaServiceServer) TestFunction(context.Context, *TestFunctionResquest) (*LambdaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TestFunction not implemented")
 }
-func (UnimplementedLambdaServiceServer) InvoqueFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method InvoqueFunction not implemented")
+func (UnimplementedLambdaServiceServer) InvokeFunction(context.Context, *InvoqueFunctionRequest) (*LambdaResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method InvokeFunction not implemented")
 }
 func (UnimplementedLambdaServiceServer) SeedLambdaServer(context.Context, *emptypb.Empty) (*LambdaResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SeedLambdaServer not implemented")
@@ -207,20 +207,20 @@ func _LambdaService_TestFunction_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-func _LambdaService_InvoqueFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _LambdaService_InvokeFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(InvoqueFunctionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(LambdaServiceServer).InvoqueFunction(ctx, in)
+		return srv.(LambdaServiceServer).InvokeFunction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/lambda.LambdaService/InvoqueFunction",
+		FullMethod: "/lambda.LambdaService/InvokeFunction",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(LambdaServiceServer).InvoqueFunction(ctx, req.(*InvoqueFunctionRequest))
+		return srv.(LambdaServiceServer).InvokeFunction(ctx, req.(*InvoqueFunctionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -313,8 +313,8 @@ var _LambdaService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _LambdaService_TestFunction_Handler,
 		},
 		{
-			MethodName: "InvoqueFunction",
-			Handler:    _LambdaService_InvoqueFunction_Handler,
+			MethodName: "InvokeFunction",
+			Handler:    _LambdaService_InvokeFunction_Handler,
 		},
 		{
 			MethodName: "SeedLambdaServer",

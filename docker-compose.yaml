@@ -40,6 +40,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile.service
+    container_name: lambda
     ports:
       - "6002:6002"
       - "7002:7002"
@@ -67,46 +68,38 @@ services:
     depends_on:
       - eb-db
 
-  cache:
-    image: redis
-    ports:
-      - "6666:6379"
-    logging:
-      driver: none
-
-  admin:
-    image: dpage/pgadmin4
-    container_name: admin
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: mcuve@outlook.com
-      PGADMIN_DEFAULT_PASSWORD: maotrix1
-    logging:
-      driver: none
-
-  sqs-db:
-    <<: *defaults-db
-    container_name: sqs-db
-    volumes:
-      - sqs-data:/var/lib/postgresql/data
-
-  eb-db:
-    <<: *defaults-db
-    container_name: eb-db
-    volumes:
-      - eb-data:/var/lib/postgresql/data
   iam-db:
     <<: *defaults-db
+    ports: 
+      - "8000:5432"
     container_name: iam-db
     volumes:
       - iam-data:/var/lib/postgresql/data
 
+  sqs-db:
+    <<: *defaults-db
+    ports: 
+      - "8001:5432"
+    container_name: sqs-db
+    volumes:
+      - sqs-data:/var/lib/postgresql/data
+
   lambda-db:
     <<: *defaults-db
     container_name: lambda-db
+    ports: 
+      - "8002:5432"
     volumes:
       - lambda-data:/var/lib/postgresql/data
+
+  eb-db:
+    <<: *defaults-db
+    container_name: eb-db
+    ports: 
+      - "8003:5432"
+    volumes:
+      - eb-data:/var/lib/postgresql/data
+
 
 volumes:
   sqs-data:

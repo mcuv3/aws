@@ -1,0 +1,28 @@
+[
+  {
+    "alias": "iam",
+    "name": "/iam.IAMService",
+    "methods": ["RootUserLogin", "CreateUser"]
+  },
+  {
+    "alias": "lambda",
+    "name": "/lambda.LambdaService",
+    "methods": [
+      "CreateFunction",
+      "DeleteFunction",
+      "UpdateFunction",
+      "InvokeFunction"
+    ]
+  },
+  {
+    "alias": "sqs",
+    "name": "/sqs.SQSService",
+    "methods": [
+      "CreateQueue",
+      "SendMessage",
+      "ReceiveMessage",
+      "DeleteMessage",
+      "DeleteQueue"
+    ]
+  }
+]

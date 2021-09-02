@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
+	"github.com/MauricioAntonioMartinez/aws/eventbridge"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/iam"
 	"github.com/MauricioAntonioMartinez/aws/lambda"
@@ -47,6 +48,11 @@ func main() {
 	case "lambda":
 		r := c.(*cli.LambdaCmd)
 		if err = lambda.Run(*r, l); err != nil {
+			l.Fatal().Msg("Unable to start lambda service.")
+		}
+	case "eventbridge":
+		r := c.(*cli.EventBridgeCmd)
+		if err = eventbridge.Run(*r, l); err != nil {
 			l.Fatal().Msg("Unable to start lambda service.")
 		}
 	}

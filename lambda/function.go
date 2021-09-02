@@ -109,7 +109,7 @@ func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionR
 	}, nil
 }
 
-func (l *LambdaService) InvoqueFunction(ctx context.Context, req *aws.InvoqueFunctionRequest) (*aws.LambdaResponse, error) {
+func (l *LambdaService) InvokeFunction(ctx context.Context, req *aws.InvoqueFunctionRequest) (*aws.LambdaResponse, error) {
 
 	res := model.Function{}
 

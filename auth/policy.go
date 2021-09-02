@@ -11,7 +11,7 @@ type Effect string
 
 type Action string
 
-type Service string 
+type Service string
 
 type Region string
 
@@ -21,27 +21,28 @@ const (
 )
 
 var (
-	Services = []string{"iam", "sqs", "lambda", "ses"}
-	GlobalServices = []string{"s3","cloudfront","organization"}
+	Services       = []string{"iam", "sqs", "lambda", "ses", "eventbridge"}
+	GlobalServices = []string{"s3", "cloudfront", "organization"}
 )
 
 var (
 	Svs = map[Service]string{
-		IAM:"iam",
+		IAM: "iam",
 	}
 )
 
 const (
-	IAM Service = "iam"
-	SQS 		= "sqs"
-	Lambda		= "lambda"
-	SES			= "ses"
-	CloudFront  = "cloudfront"
+	IAM         Service = "iam"
+	SQS                 = "sqs"
+	Lambda              = "lambda"
+	SES                 = "ses"
+	CloudFront          = "cloudfront"
+	EventBridge         = "eventbridge"
 )
 
 const (
 	REGION_NONE Region = ""
-	US_EAST_1  = "us-east-1"
+	US_EAST_1          = "us-east-1"
 )
 
 type Statement struct {
@@ -56,7 +57,6 @@ type ResourcePolicy struct {
 	Version    string      `json:"version"`
 	Statements []Statement `json:"statement"`
 }
-
 
 // TODO: logic to validate and create policies easier.
 
@@ -85,8 +85,6 @@ func (r *ResourcePolicy) CheckPermission(action Action, resources ...Arn) bool {
 
 	return isAllowed
 }
-
-
 
 func (a Action) Validate(service string, avaliableMethods []string) bool {
 	parts := strings.Split(string(a), ":")

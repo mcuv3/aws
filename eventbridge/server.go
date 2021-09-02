@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
@@ -20,6 +21,7 @@ import (
 
 type EventBridgeService struct {
 	auth    *auth.AuthInterceptor
+	Name    auth.Service
 	logger  zerolog.Logger
 	db      *gorm.DB
 	region  string
@@ -42,6 +44,11 @@ func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 	service := newEventBridgeService(cmd, db)
 	service.RegisterGRPC()
 
+	// if err := service.Seed(); err != nil {
+	// 	fmt.Println(err)
+	// 	return err
+	// }
+
 	if cmd.EnableGrpc && cmd.EnableWeb {
 		go service.ServeGrpc(cmd.PortGrpc, cmd.Name())
 		return service.ServeWeb(cmd.PortWeb, cmd.Name())
@@ -59,21 +66,24 @@ func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 }
 
 func runMigrations(db *gorm.DB) {
-	db.AutoMigrate(model.TargetType{}, model.Target{}, model.Rule{})
+	db.AutoMigrate(model.ServiceEvent{}, model.Rule{}, model.Target{})
 }
 
 func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeService {
 	l := helpers.NewLogger()
 
 	service := EventBridgeService{
+		Name:   auth.EventBridge,
 		logger: l,
 		auth: &auth.AuthInterceptor{
 			Issuer: cmd.Name(),
 			Mannager: &auth.JWTMannger{
 				SecretKey: cmd.Secret,
+				Duration:  time.Hour,
 			},
-			ServerPrefix:  "/eventbridge.EventBridge/",
+			ServerPrefix:  "/eventbridge.EventBridgeService/",
 			PublicMethods: []string{},
+			Logger:        l,
 		},
 		db:     db,
 		region: cmd.Region,

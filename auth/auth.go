@@ -29,19 +29,17 @@ type RootClaims struct {
 	AccountId string
 }
 
-type UserMetadata struct { 
-	Email string
+type UserMetadata struct {
+	Email     string
 	AccountId string
 }
-
-
 
 type AuthInterceptor struct {
 	Mannager      *JWTMannger
 	Issuer        string
 	Logger        zerolog.Logger
 	PublicMethods []string
-	ServerPrefix string
+	ServerPrefix  string
 }
 
 type JWTMannger struct {
@@ -57,30 +55,25 @@ func NewAuthInterceptor(mannager *JWTMannger, issuer string) *AuthInterceptor {
 	return &AuthInterceptor{Mannager: mannager, Issuer: issuer}
 }
 
-
-
-
 func (a *AuthInterceptor) GetUserMetadata(ctx context.Context) (*UserMetadata, error) {
 
-	md,ok:= metadata.FromIncomingContext(ctx)
+	md, ok := metadata.FromIncomingContext(ctx)
 
-	if !ok { 
-		return nil,errors.New("Unable to get the context")
+	if !ok {
+		return nil, errors.New("Unable to get the context")
 	}
 
-	accountId,okAccount :=  md["AccountId"]
-	email,okEmail := md["Email"] 
+	accountId, okAccount := md["accountid"]
+	email, okEmail := md["email"]
 
 	if !okEmail || !okAccount {
-		return nil,errors.New("Incomplete metadata")
+		return nil, errors.New("Incomplete metadata")
 	}
 
-
-	if len(accountId) == 0 || len(email) == 0 { 
-		return nil,errors.New("Incomplete user metadata.")
+	if len(accountId) == 0 || len(email) == 0 {
+		return nil, errors.New("Incomplete user metadata.")
 	}
-	return &UserMetadata{Email: email[0],AccountId: accountId[0]},nil
-
+	return &UserMetadata{Email: email[0], AccountId: accountId[0]}, nil
 
 }
 
@@ -157,9 +150,10 @@ func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 		var err error
 		skipAuth := false
 
+		fmt.Println(info.FullMethod)
 
-		for _,method := range a.PublicMethods { 
-			if fmt.Sprintf("%s%s",a.ServerPrefix,method) == info.FullMethod {
+		for _, method := range a.PublicMethods {
+			if fmt.Sprintf("%s%s", a.ServerPrefix, method) == info.FullMethod {
 				skipAuth = true
 			}
 		}
@@ -168,31 +162,29 @@ func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 			if claims, err = a.Authorize(ctx, info.FullMethod); err != nil {
 				return nil, err
 			}
-			ctxWithAuth := metadata.NewIncomingContext(ctx,metadata.MD{
-				"AccountId":[]string{ claims.AccountId},
-				"Email":[]string{ claims.Username},
-			}) 
+			ctxWithAuth := metadata.NewIncomingContext(ctx, metadata.MD{
+				"AccountId": []string{claims.AccountId},
+				"Email":     []string{claims.Username},
+			})
 			return handler(ctxWithAuth, req)
-		} 
+		}
 
-		return handler(ctx,req)
-
+		return handler(ctx, req)
 
 	}
 }
 
 func (a *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
-    return func(
-        srv interface{},
-        stream grpc.ServerStream,
-        info *grpc.StreamServerInfo,
-        handler grpc.StreamHandler,
-    ) error {
+	return func(
+		srv interface{},
+		stream grpc.ServerStream,
+		info *grpc.StreamServerInfo,
+		handler grpc.StreamHandler,
+	) error {
 
 		if info.IsServerStream {
 			return handler(srv, stream)
 		}
-
 
 		a.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
 
@@ -200,54 +192,48 @@ func (a *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 		var err error
 		skipAuth := false
 
-
-		for _,method := range a.PublicMethods { 
-			if fmt.Sprintf("%s%s",a.ServerPrefix,method) == info.FullMethod {
+		for _, method := range a.PublicMethods {
+			if fmt.Sprintf("%s%s", a.ServerPrefix, method) == info.FullMethod {
 				skipAuth = true
 			}
 		}
- 
+
 		if !skipAuth {
 			if claims, err = a.Authorize(stream.Context(), info.FullMethod); err != nil {
-				return  err
+				return err
 			}
 
-			
 			stream.SetTrailer(metadata.MD{
-				"AccountId":[]string{claims.AccountId},
-				// "Email":[]string{claims.Username},
-			}) 
-			stream.SetHeader(metadata.MD{
-				"AccountId":[]string{claims.AccountId},
+				"AccountId": []string{claims.AccountId},
 				// "Email":[]string{claims.Username},
 			})
-		
-			metadata.AppendToOutgoingContext(stream.Context(),"TEST","TEST")
-	stream.Context()
+			stream.SetHeader(metadata.MD{
+				"AccountId": []string{claims.AccountId},
+				// "Email":[]string{claims.Username},
+			})
+
+			metadata.AppendToOutgoingContext(stream.Context(), "TEST", "TEST")
+			stream.Context()
 			// fmt.Println(claims)
-		} 
+		}
 
 		stream.SetHeader(metadata.MD{
-			"Something":[]string{"testin"},
+			"Something": []string{"testin"},
 		})
 
-
-		return handler(srv,stream)
-    }
+		return handler(srv, stream)
+	}
 }
 
-
-func (u *UserMetadata) String() string { 
-	var(
-		v = &url.Values{
-			
-		}
+func (u *UserMetadata) String() string {
+	var (
+		v = &url.Values{}
 		s = reflect.ValueOf(*u)
 		t = reflect.TypeOf(*u)
 	)
 
-	for i := 0 ; i < s.NumField(); i++ { 
-		v.Add(t.Field(i).Name,fmt.Sprintf("%v",s.Field(i).Interface()))
+	for i := 0; i < s.NumField(); i++ {
+		v.Add(t.Field(i).Name, fmt.Sprintf("%v", s.Field(i).Interface()))
 	}
 	return v.Encode()
 }
