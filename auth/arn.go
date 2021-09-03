@@ -13,11 +13,11 @@ type Arn struct {
 	ResourceId string
 }
 
-func (Arn) validateArn(a string) bool {
+func ValidateArn(arn string) bool {
 
-	parts := strings.Split(a, ":")
+	parts := strings.Split(arn, ":")
 
-	if len(a) == 1 && a == "*" {
+	if len(arn) == 1 && arn == "*" {
 		return true
 	}
 
@@ -37,7 +37,7 @@ func NewArn(s Service, region string, accountId string, ResourceId string) (*Arn
 	}
 
 	fmt.Println(arn.String())
-	isValid := arn.validateArn(arn.String())
+	isValid := ValidateArn(arn.String())
 
 	if !isValid {
 		return nil, errors.New("Invalid arn")

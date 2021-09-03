@@ -4,12 +4,14 @@ import "gorm.io/gorm"
 
 type Rule struct {
 	gorm.Model
-	Name           string   `gorm:"type:varchar(100);not null" validation:"required;gte=5"`
-	Arn            string   `gorm:"type:varchar(200);not null;uniqueIndex"`
+	Name           string   `gorm:"type:varchar(100);not null;index:rule_idx,unique"`
+	AccountId      string   `gorm:"index:rule_idx,unique"`
+	Arn            string   `gorm:"type:varchar(200);not null"`
 	Description    string   `gorm:"type:varchar(255);not null"`
 	ServiceEventID *uint    // /lambda.LambdaService/CreateLambda
 	EventPattern   string   //	cron(* 30 * * * *)
 	Targets        []Target `gorm:"foreignkey:RuleID"`
+	Active         bool     `gorm:"type:boolean;not null;default:true"`
 }
 
 type ServiceEvent struct {

@@ -7,8 +7,8 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *IAMService) RootUserLogin(ctx context.Context, req *aws.RootUserLoginRequest) (*aws.LoginResponse, error) {
@@ -46,20 +46,20 @@ func (s *IAMService) UserLogin(ctx context.Context, req *aws.UserLoginRequest) (
 	us, err := s.storage.FindUser("name = ? AND account_id = ?", name, accountId)
 
 	if err != nil {
-		return nil, grpc.Errorf(codes.NotFound, "Unable to find a user")
+		return nil, status.Errorf(codes.NotFound, "Unable to find a user")
 	}
 
 	isValid := bcrypt.CompareHashAndPassword([]byte(us.Password), []byte(password))
 
 	if isValid != nil {
-		return nil, grpc.Errorf(codes.PermissionDenied, fmt.Sprint("Incorrect password."))
+		return nil, status.Errorf(codes.PermissionDenied, fmt.Sprint("Incorrect password."))
 	}
 
 	token, err := s.auth.GetToken(auth.UserClaims{Username: us.Name, IsRootUser: false, AccountId: us.AccountId})
 
 	if err != nil {
 		s.logger.Err(err).Msg("Unable to generate token")
-		return nil, grpc.Errorf(codes.Internal, "Unable to generate a token.")
+		return nil, status.Errorf(codes.Internal, "Unable to generate a token.")
 	}
 
 	return &aws.LoginResponse{Token: token}, nil
@@ -75,7 +75,7 @@ func (s *IAMService) SignUp(ctx context.Context, req *aws.SignUpRequest) (*aws.S
 
 	if err != nil {
 		s.logger.Err(err).AnErr("Aws-User", err).Msg("Error createing an aws root user.")
-		return nil, grpc.Errorf(codes.Internal, fmt.Sprintf("Unable to create a user reason: %v", err))
+		return nil, status.Errorf(codes.Internal, fmt.Sprintf("Unable to create a user reason: %v", err))
 	}
 
 	return &aws.SignUpResponse{Succeed: true, AccountId: user.AccountId}, nil

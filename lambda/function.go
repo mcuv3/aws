@@ -12,14 +12,14 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/docker"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunctionRequest) (*aws.LambdaResponse, error) {
 	us, err := l.auth.GetUserMetadata(ctx)
 	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, "Unable to authenticate in lambda.")
+		return nil, status.Errorf(codes.Unauthenticated, "Unable to authenticate in lambda.")
 	}
 
 	image := strings.ToLower("mcuve" + "/" + l.region + "-" + us.AccountId + "-" + req.GetName())
@@ -27,7 +27,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 
 	tx := l.db.Where("name = ?", req.GetRuntime().String()).First(&runtime)
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.Internal, "Unable to find runtime")
+		return nil, status.Errorf(codes.Internal, "Unable to find runtime")
 	}
 	path.Base(req.GetHandler())
 	ext := path.Ext(req.GetHandler())
@@ -36,7 +36,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 	arn, err := auth.NewArn(auth.Lambda, l.region, us.AccountId, req.GetName())
 
 	if err != nil {
-		return nil, grpc.Errorf(codes.Internal, "Unable to generare arn")
+		return nil, status.Errorf(codes.Internal, "Unable to generare arn")
 	}
 
 	function := model.Function{
@@ -52,7 +52,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 
 	tx = l.db.Create(&function)
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.Internal, "Error creating function.")
+		return nil, status.Errorf(codes.Internal, "Error creating function.")
 	}
 
 	dockerFile := fmt.Sprintf(` 
@@ -78,7 +78,7 @@ func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionR
 	us, err := l.auth.GetUserMetadata(ctx)
 
 	if err != nil {
-		return nil, grpc.Errorf(codes.Unauthenticated, "Unable to authenticate from lambda")
+		return nil, status.Errorf(codes.Unauthenticated, "Unable to authenticate from lambda")
 	}
 
 	image := strings.ToLower("mcuve" + "/" + l.region + "-" + us.AccountId + "-" + req.GetFunctionName())
@@ -88,7 +88,7 @@ func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionR
 	tx := l.db.Where("image = ?", image).First(&res)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.NotFound, "Function not found")
+		return nil, status.Errorf(codes.NotFound, "Function not found")
 	}
 
 	env := map[string]interface{}{
@@ -116,7 +116,7 @@ func (l *LambdaService) InvokeFunction(ctx context.Context, req *aws.InvoqueFunc
 	tx := l.db.Where("arn = ?", req.GetArn()).First(&res)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.NotFound, "Function not found")
+		return nil, status.Errorf(codes.NotFound, "Function not found")
 	}
 
 	freeExecution := l.getAvaibleExecution(res.Arn)
@@ -125,7 +125,7 @@ func (l *LambdaService) InvokeFunction(ctx context.Context, req *aws.InvoqueFunc
 		lx, err := l.newLambdaExecution(res.Arn)
 
 		if err != nil {
-			return nil, grpc.Errorf(codes.Internal, "Something went wrong running the lambda")
+			return nil, status.Errorf(codes.Internal, "Something went wrong running the lambda")
 		}
 
 		env := map[string]interface{}{
@@ -159,7 +159,7 @@ func (l *LambdaService) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.L
 	execution := l.LambdaExecutionManager.getExecution(req.GetHash())
 
 	if execution == nil {
-		return grpc.Errorf(codes.Aborted, "Invalid or unknown hash")
+		return status.Errorf(codes.Aborted, "Invalid or unknown hash")
 	}
 
 	fn := model.Function{}
@@ -167,7 +167,7 @@ func (l *LambdaService) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.L
 	tx := l.db.Where("arn = ?", execution.FuncArn).First(&fn)
 
 	if tx.Error != nil {
-		return grpc.Errorf(codes.NotFound, "Function not found")
+		return status.Errorf(codes.NotFound, "Function not found")
 	}
 
 broker:
@@ -199,7 +199,7 @@ func (l *LambdaService) UpdateLambda(ctx context.Context, req *aws.UpdateLambdaR
 	tx := l.db.Where("arn = ?", req.GetArn()).First(&lambda)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.NotFound, "Invalid function")
+		return nil, status.Errorf(codes.NotFound, "Invalid function")
 	}
 
 	if req.GetCode() != "" {
@@ -216,7 +216,7 @@ func (l *LambdaService) UpdateLambda(ctx context.Context, req *aws.UpdateLambdaR
 	tx = l.db.Save(&lambda)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.Internal, "Unable to update the lambda function")
+		return nil, status.Errorf(codes.Internal, "Unable to update the lambda function")
 	}
 
 	return &aws.LambdaResponse{
@@ -231,13 +231,13 @@ func (l *LambdaService) DeleteLambda(ctx context.Context, req *aws.DeleteLambdaR
 	tx := l.db.Where("arn = ?", req.GetArn()).First(&lambda)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.NotFound, "Invalid function")
+		return nil, status.Errorf(codes.NotFound, "Invalid function")
 	}
 
 	tx = l.db.Delete(&lambda)
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.Internal, "Unable to delete the function please try later")
+		return nil, status.Errorf(codes.Internal, "Unable to delete the function please try later")
 	}
 
 	return &aws.LambdaResponse{

@@ -18,12 +18,13 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
 func (s *SQSService) Error(err error, code codes.Code, msg string) error {
 	s.logger.Err(err)
-	return grpc.Errorf(code, msg)
+	return status.Errorf(code, msg)
 }
 
 type SQSService struct {
@@ -35,7 +36,7 @@ type SQSService struct {
 }
 
 func Run(cmd cli.SqsCmd, l zerolog.Logger) error {
-
+	fmt.Println(cmd.EnableWeb)
 	db, err := database.New(cmd.DbUrl)
 	if err != nil {
 		err = fmt.Errorf("Failed to connect database: %w", err)

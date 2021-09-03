@@ -6,8 +6,8 @@ import (
 
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -43,7 +43,7 @@ func (l *LambdaService) SeedLambdaServer(ctx context.Context, in *emptypb.Empty)
 	tx := l.db.CreateInBatches(rnts, len(runtimes))
 
 	if tx.Error != nil {
-		return nil, grpc.Errorf(codes.Internal, "Couldn't seed the routines")
+		return nil, status.Errorf(codes.Internal, "Couldn't seed the routines")
 	}
 
 	return &aws.LambdaResponse{Message: "Sucessfully seeded the runtimes", Ok: true}, nil

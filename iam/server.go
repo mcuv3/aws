@@ -18,6 +18,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -59,7 +60,7 @@ func Run(cmd cli.IamCmd, logger zerolog.Logger) error {
 
 func (s *IAMService) Error(err error, code codes.Code, msg string) error {
 	s.logger.Err(err)
-	return grpc.Errorf(code, msg)
+	return status.Errorf(code, msg)
 }
 
 func runMigrations(db *gorm.DB) {

@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "logs"
 
 [build]
-  bin = "./tmp/main $SERVICE --secret=$SECRET --enable-web false"
+  bin = "./tmp/main $SERVICE --secret=$SECRET --enable-web=false"
   cmd = "go build -o ./tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor","docs","web/node_modules","lambda/prebuild/nodejs/node_modules","lambda/prebuild/nodejs/dist","proto/google"]

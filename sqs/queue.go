@@ -8,8 +8,8 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (s *SQSService) CreateQueue(ctx context.Context, req *aws.CreateQueueRequest) (*aws.CreateQueueResponse, error) {
@@ -22,7 +22,7 @@ func (s *SQSService) CreateQueue(ctx context.Context, req *aws.CreateQueueReques
 	}
 
 	if res := s.db.Where("account_id = ? AND name =  ?", us.AccountId, queueName).First(&model.Queue{}); res.Error == nil {
-		return nil, grpc.Errorf(codes.NotFound, "Something went wrong %s", queueName)
+		return nil, status.Errorf(codes.NotFound, "Something went wrong %s", queueName)
 	}
 
 	conf := req.GetConf()
