@@ -15,11 +15,7 @@ import (
 // TODO: test is this rpc call work.
 
 func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRuleRequest) (*aws.CreateRuleResponse, error) {
-
 	us, err := s.auth.GetUserMetadata(ctx)
-
-	s.logger.Debug().Msgf("User metadata: %+v", us)
-	s.logger.Debug().Msgf("Err: %v", err)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "401:eventbridge")
 	}
@@ -43,9 +39,7 @@ func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRule
 		EventPattern:   cron,
 		Targets:        s.GetTargets(req.GetTargets()),
 	}
-
 	tx := s.db.Save(&rule)
-
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "500:could-not-save-rule")
 	}
@@ -55,7 +49,7 @@ func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRule
 	}, nil
 }
 
-func (s *EventBridgeService) UpdateRule(ctx context.Context, req *aws.CreateRuleRequest) (*aws.EventBridgeResponse, error) {
+func (s *EventBridgeService) UpdateRule(ctx context.Context, req *aws.UpdateRuleRequest) (*aws.EventBridgeResponse, error) {
 	rule, err := s.getRuleForUser(ctx, req.GetName())
 	if err != nil {
 		return nil, err
@@ -66,20 +60,25 @@ func (s *EventBridgeService) UpdateRule(ctx context.Context, req *aws.CreateRule
 		return nil, err
 	}
 
+	fmt.Println("cron ", cron)
+
 	newRule := model.Rule{
-		Description:    rule.Description,
+		Description:    req.GetDescription(),
 		ServiceEventID: svcEvent,
 		EventPattern:   cron,
-		Targets:        s.GetTargets(req.GetTargets()), // this will the delete the old ones? if not delete all of them manually.
+		Active:         true,
 	}
 
-	tx := s.db.Save(&newRule)
-
+	updates := []string{"description", "service_event_id", "event_pattern", "active"}
+	tx := s.db.Model(&rule).Select(updates).Updates(&newRule)
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "500:could-not-update-rule")
 	}
 
-	return nil, nil
+	return &aws.EventBridgeResponse{
+		Message: "Successfully updated",
+		Status:  "200",
+	}, nil
 }
 
 // Deletes a rule from the datbase
@@ -89,7 +88,7 @@ func (s *EventBridgeService) DeleteRule(ctx context.Context, req *aws.DeleteRule
 		return nil, err
 	}
 
-	if tx := s.db.Delete(&rule); tx.Error != nil {
+	if err := s.repo.deleteRule(rule); err != nil {
 		return nil, status.Errorf(codes.Internal, "500:rule-not-deleted")
 	}
 
@@ -108,6 +107,13 @@ func (s *EventBridgeService) ChangeRuleState(ctx context.Context, req *aws.Chang
 		return nil, status.Errorf(codes.Internal, "500:rule-toggle-active")
 	}
 
+	return &aws.EventBridgeResponse{
+		Message: "Successfully updated status.",
+		Status:  "200",
+	}, nil
+}
+
+func (s *EventBridgeService) UpdateTarget(ctx context.Context, req *aws.UpdateTargetRequest) (*aws.EventBridgeResponse, error) {
 	return nil, nil
 }
 
@@ -117,10 +123,14 @@ func (s *EventBridgeService) getRuleForUser(ctx context.Context, rulename string
 		return nil, status.Errorf(codes.Unauthenticated, "401:eventbridge-unauthenticated")
 	}
 
-	rule := model.Rule{}
-	if tx := s.db.Where("name = ?", rulename).First(&rule); tx.Error != nil || strings.Contains(rule.Arn, us.AccountId) {
+	rule := model.Rule{
+		Name:      rulename,
+		AccountId: us.AccountId,
+	}
+	if err = s.repo.findRule(&rule); err != nil {
 		return nil, status.Errorf(codes.NotFound, "404:rule")
 	}
+
 	return &rule, nil
 }
 
@@ -129,28 +139,36 @@ type rulePayload struct {
 	eventPattern  *aws.EventPattern
 }
 
-func (s *EventBridgeService) getRuleEvents(req rulePayload) (string, *uint, error) {
+func (s *EventBridgeService) getRuleEvents(req rulePayload) (*string, *uint, error) {
 	cron := req.scheduleEvent.GetCron()
 	event := req.eventPattern
-	eType := event.GetEventType()
-	eSource := event.GetService().String()
+	svcMethod := event.GetEventType()
+	svc := event.GetService().String()
 
-	isServiceEvent := (eType != "" && eSource != "")
+	isServiceEvent := (svcMethod != "" && svc != "")
 	isCronEvent := (cron != "")
 	if (isCronEvent && isServiceEvent) || (!isCronEvent && !isServiceEvent) {
-		return "", nil, status.Errorf(codes.InvalidArgument, "400:only-one-event")
+		return nil, nil, status.Errorf(codes.InvalidArgument, "400:only-one-event")
 	}
 
 	var svcEvent *uint
+	var cronEvent *string
+
+	if isCronEvent {
+		cronEvent = &cron
+	}
 
 	if isServiceEvent {
-		svcE := model.ServiceEvent{}
-		if err := s.db.Where("path = ?", fmt.Sprintf("%s/%s", eSource, eType)).First(&svcE); err != nil {
-			return "", nil, status.Errorf(codes.InvalidArgument, "Unknown source or type")
+		svcE, err := s.repo.findServiceEvent(model.ServiceEvent{
+			Name:   strings.ToLower(svc),
+			Method: svcMethod,
+		})
+		if err != nil {
+			return nil, nil, status.Errorf(codes.InvalidArgument, "Unknown source or type")
 		}
 		svcEvent = &svcE.ID
 	}
 
-	return cron, svcEvent, nil
+	return cronEvent, svcEvent, nil
 
 }

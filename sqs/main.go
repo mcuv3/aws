@@ -36,7 +36,6 @@ type SQSService struct {
 }
 
 func Run(cmd cli.SqsCmd, l zerolog.Logger) error {
-	fmt.Println(cmd.EnableWeb)
 	db, err := database.New(cmd.DbUrl)
 	if err != nil {
 		err = fmt.Errorf("Failed to connect database: %w", err)

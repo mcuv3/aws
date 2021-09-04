@@ -12,6 +12,7 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
+	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -75,7 +76,8 @@ func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
 		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
 		Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}}
 
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary()))
+	inter := interceptors.NewAuditInterceptor("kafka:9092", "audit", 0)
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary(), inter.Unary()))
 	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
 	return IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInt, grpc: s, webgrpc: *webgrpc}

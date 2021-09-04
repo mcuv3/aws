@@ -9,15 +9,17 @@ type Rule struct {
 	Arn            string   `gorm:"type:varchar(200);not null"`
 	Description    string   `gorm:"type:varchar(255);not null"`
 	ServiceEventID *uint    // /lambda.LambdaService/CreateLambda
-	EventPattern   string   //	cron(* 30 * * * *)
+	EventPattern   *string  //	cron(* 30 * * * *)
 	Targets        []Target `gorm:"foreignkey:RuleID"`
 	Active         bool     `gorm:"type:boolean;not null;default:true"`
 }
 
 type ServiceEvent struct {
 	gorm.Model
-	Path  string `gorm:"type:varchar(100);not null;uniqueIndex"`
-	Rules []Rule `gorm:"foreignkey:ServiceEventID"`
+	Method string
+	Name   string
+	Path   string `gorm:"type:varchar(100);not null;index:svc_idx,unique"`
+	Rules  []Rule `gorm:"foreignkey:ServiceEventID"`
 }
 
 type Target struct {

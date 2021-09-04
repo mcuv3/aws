@@ -18,7 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EventBridgeServiceClient interface {
 	CreateRule(ctx context.Context, in *CreateRuleRequest, opts ...grpc.CallOption) (*CreateRuleResponse, error)
-	UpdateRule(ctx context.Context, in *CreateRuleRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error)
+	UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error)
+	UpdateTarget(ctx context.Context, in *UpdateTargetRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error)
 	DeleteRule(ctx context.Context, in *DeleteRuleRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error)
 	ChangeRuleState(ctx context.Context, in *ChangeRuleStateRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error)
 }
@@ -40,9 +41,18 @@ func (c *eventBridgeServiceClient) CreateRule(ctx context.Context, in *CreateRul
 	return out, nil
 }
 
-func (c *eventBridgeServiceClient) UpdateRule(ctx context.Context, in *CreateRuleRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error) {
+func (c *eventBridgeServiceClient) UpdateRule(ctx context.Context, in *UpdateRuleRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error) {
 	out := new(EventBridgeResponse)
 	err := c.cc.Invoke(ctx, "/eventbridge.EventBridgeService/UpdateRule", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *eventBridgeServiceClient) UpdateTarget(ctx context.Context, in *UpdateTargetRequest, opts ...grpc.CallOption) (*EventBridgeResponse, error) {
+	out := new(EventBridgeResponse)
+	err := c.cc.Invoke(ctx, "/eventbridge.EventBridgeService/UpdateTarget", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +82,8 @@ func (c *eventBridgeServiceClient) ChangeRuleState(ctx context.Context, in *Chan
 // for forward compatibility
 type EventBridgeServiceServer interface {
 	CreateRule(context.Context, *CreateRuleRequest) (*CreateRuleResponse, error)
-	UpdateRule(context.Context, *CreateRuleRequest) (*EventBridgeResponse, error)
+	UpdateRule(context.Context, *UpdateRuleRequest) (*EventBridgeResponse, error)
+	UpdateTarget(context.Context, *UpdateTargetRequest) (*EventBridgeResponse, error)
 	DeleteRule(context.Context, *DeleteRuleRequest) (*EventBridgeResponse, error)
 	ChangeRuleState(context.Context, *ChangeRuleStateRequest) (*EventBridgeResponse, error)
 }
@@ -84,8 +95,11 @@ type UnimplementedEventBridgeServiceServer struct {
 func (UnimplementedEventBridgeServiceServer) CreateRule(context.Context, *CreateRuleRequest) (*CreateRuleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRule not implemented")
 }
-func (UnimplementedEventBridgeServiceServer) UpdateRule(context.Context, *CreateRuleRequest) (*EventBridgeResponse, error) {
+func (UnimplementedEventBridgeServiceServer) UpdateRule(context.Context, *UpdateRuleRequest) (*EventBridgeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateRule not implemented")
+}
+func (UnimplementedEventBridgeServiceServer) UpdateTarget(context.Context, *UpdateTargetRequest) (*EventBridgeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTarget not implemented")
 }
 func (UnimplementedEventBridgeServiceServer) DeleteRule(context.Context, *DeleteRuleRequest) (*EventBridgeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteRule not implemented")
@@ -124,7 +138,7 @@ func _EventBridgeService_CreateRule_Handler(srv interface{}, ctx context.Context
 }
 
 func _EventBridgeService_UpdateRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateRuleRequest)
+	in := new(UpdateRuleRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -136,7 +150,25 @@ func _EventBridgeService_UpdateRule_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/eventbridge.EventBridgeService/UpdateRule",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EventBridgeServiceServer).UpdateRule(ctx, req.(*CreateRuleRequest))
+		return srv.(EventBridgeServiceServer).UpdateRule(ctx, req.(*UpdateRuleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EventBridgeService_UpdateTarget_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTargetRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EventBridgeServiceServer).UpdateTarget(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/eventbridge.EventBridgeService/UpdateTarget",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EventBridgeServiceServer).UpdateTarget(ctx, req.(*UpdateTargetRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -188,6 +220,10 @@ var _EventBridgeService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateRule",
 			Handler:    _EventBridgeService_UpdateRule_Handler,
+		},
+		{
+			MethodName: "UpdateTarget",
+			Handler:    _EventBridgeService_UpdateTarget_Handler,
 		},
 		{
 			MethodName: "DeleteRule",

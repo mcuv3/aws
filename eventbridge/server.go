@@ -11,6 +11,7 @@ import (
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
+	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -27,6 +28,7 @@ type EventBridgeService struct {
 	region  string
 	grpc    *grpc.Server
 	grpcweb http.Server
+	repo    EventBridgeRepo
 }
 
 func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
@@ -62,7 +64,7 @@ func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
 
-	return errors.New("Enable either web or grpc or both")
+	return errors.New("enable either web or grpc or both")
 }
 
 func runMigrations(db *gorm.DB) {
@@ -71,10 +73,12 @@ func runMigrations(db *gorm.DB) {
 
 func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeService {
 	l := helpers.NewLogger()
+	auditor := interceptors.NewAuditInterceptor("kafka:9092", "audit", 1)
 
 	service := EventBridgeService{
 		Name:   auth.EventBridge,
 		logger: l,
+		repo:   EventBridgeRepo{db},
 		auth: &auth.AuthInterceptor{
 			Issuer: cmd.Name(),
 			Mannager: &auth.JWTMannger{
@@ -89,8 +93,8 @@ func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeServi
 		region: cmd.Region,
 	}
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(service.auth.Unary()),
-		grpc.StreamInterceptor(service.auth.Stream()),
+		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditor.Unary()),
+		grpc.StreamInterceptor(auditor.Stream()),
 	)
 	service.grpc = s
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)

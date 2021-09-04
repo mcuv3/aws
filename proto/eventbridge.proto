@@ -63,9 +63,24 @@ message ChangeRuleStateRequest {
     string name = 1;
 }
 
+message UpdateRuleRequest {
+    string name = 1;
+    string description = 2;
+    oneof event {
+        EventPattern event_pattern = 3;
+        ScheduleEvent schedule_event = 4;
+    }
+}
+
+message UpdateTargetRequest {
+    string rule_name = 1;
+    repeated Target targets = 2;
+}
+
 service EventBridgeService {
     rpc CreateRule(CreateRuleRequest) returns (CreateRuleResponse) {};
-    rpc UpdateRule(CreateRuleRequest) returns (EventBridgeResponse) {};
+    rpc UpdateRule(UpdateRuleRequest) returns (EventBridgeResponse) {};
+    rpc UpdateTarget(UpdateTargetRequest) returns (EventBridgeResponse) {};
     rpc DeleteRule(DeleteRuleRequest) returns (EventBridgeResponse) {};
     rpc ChangeRuleState(ChangeRuleStateRequest) returns (EventBridgeResponse) {};
 }

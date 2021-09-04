@@ -14,10 +14,6 @@ type svc struct {
 	Methods []string `json:"methods"`
 }
 
-var (
-	allowedTargets = []string{"sqs", "lambda"}
-)
-
 func (s *EventBridgeService) Seed() error {
 	data, err := os.ReadFile("eventbridge/services.json")
 
@@ -33,7 +29,9 @@ func (s *EventBridgeService) Seed() error {
 	for _, service := range services {
 		for _, method := range service.Methods {
 			s.db.Create(&model.ServiceEvent{
-				Path: fmt.Sprintf("%s/%s", service.Name, method),
+				Path:   fmt.Sprintf("%s/%s", service.Name, method),
+				Name:   service.Alias,
+				Method: method,
 			})
 		}
 	}
