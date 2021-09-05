@@ -47,8 +47,11 @@ func d() {
 }
 
 func main() {
-	inter := interceptors.NewAuditInterceptor("localhost:9092", "audit", 1)
-	inter.PublishEvent("new", "one", nil)
+	_ = interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
+		Brokers: []string{"localhost:29092"},
+		Topic:   "audit",
+		Verbose: true,
+	})
 }
 
 func dock() {

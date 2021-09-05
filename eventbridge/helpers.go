@@ -17,8 +17,3 @@ func (s *EventBridgeService) GetTargets(tgs []*aws.Target) []model.Target {
 
 	return targets
 }
-
-// Returns the associated gRPC prefix of a service based on its name
-func (s *EventBridgeService) getServiceAlias(serviceName string) string {
-	return ""
-}

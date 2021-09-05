@@ -56,7 +56,7 @@ func Run(cmd cli.IamCmd, logger zerolog.Logger) error {
 		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
 
-	return errors.New("Enable either web or grpc or both.")
+	return errors.New("enable either web or grpc or both")
 }
 
 func (s *IAMService) Error(err error, code codes.Code, msg string) error {
@@ -70,17 +70,20 @@ func runMigrations(db *gorm.DB) {
 
 func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
 	logger := helpers.NewLogger()
+	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
+		Brokers: []string{"broker:29092"},
+		Topic:   "audit",
+		Verbose: true,
+	})
 
-	authInt := auth.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
+	authInterceptor := auth.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
 		ServerPrefix:  "/iam.IAMService/",
 		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
 		Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}}
-
-	inter := interceptors.NewAuditInterceptor("kafka:9092", "audit", 0)
-	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInt.Unary(), inter.Unary()))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()))
 	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
-	return IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInt, grpc: s, webgrpc: *webgrpc}
+	return IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInterceptor, grpc: s, webgrpc: *webgrpc}
 }
 
 func (s *IAMService) RegisterGRPC() {

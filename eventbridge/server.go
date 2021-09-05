@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
@@ -21,14 +22,15 @@ import (
 )
 
 type EventBridgeService struct {
-	auth    *auth.AuthInterceptor
-	Name    auth.Service
-	logger  zerolog.Logger
-	db      *gorm.DB
-	region  string
-	grpc    *grpc.Server
-	grpcweb http.Server
-	repo    EventBridgeRepo
+	auth       *auth.AuthInterceptor
+	Name       auth.Service
+	logger     zerolog.Logger
+	db         *gorm.DB
+	region     string
+	grpc       *grpc.Server
+	grpcweb    http.Server
+	repo       EventBridgeRepo
+	dispatcher *EventBridgeDispatcher
 }
 
 func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
@@ -50,6 +52,9 @@ func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 	// 	fmt.Println(err)
 	// 	return err
 	// }
+
+	go service.ListenEvents()
+	go service.closeListener()
 
 	if cmd.EnableGrpc && cmd.EnableWeb {
 		go service.ServeGrpc(cmd.PortGrpc, cmd.Name())
@@ -73,7 +78,17 @@ func runMigrations(db *gorm.DB) {
 
 func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeService {
 	l := helpers.NewLogger()
-	auditor := interceptors.NewAuditInterceptor("kafka:9092", "audit", 1)
+	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
+		Brokers: []string{"broker:29092"},
+		Topic:   "audit",
+		Verbose: true,
+	})
+	dispatcher := newEventBridgeDispatcher(EventBridgeDispatcherConfig{
+		Identifier: "eventBridge",
+		Verbose:    false,
+		Topic:      "audit",
+		Brokers:    []string{"broker:29092"},
+	})
 
 	service := EventBridgeService{
 		Name:   auth.EventBridge,
@@ -89,12 +104,13 @@ func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeServi
 			PublicMethods: []string{},
 			Logger:        l,
 		},
-		db:     db,
-		region: cmd.Region,
+		db:         db,
+		region:     cmd.Region,
+		dispatcher: dispatcher,
 	}
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditor.Unary()),
-		grpc.StreamInterceptor(auditor.Stream()),
+		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditInterceptor.Unary()),
+		grpc.StreamInterceptor(auditInterceptor.Stream()),
 	)
 	service.grpc = s
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
@@ -130,4 +146,22 @@ func (s *EventBridgeService) ServeWeb(port, serviceName string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *EventBridgeService) ListenEvents() {
+	s.dispatcher.Start()
+}
+
+func (s *EventBridgeService) closeListener() {
+	signal := make(chan os.Signal, 1)
+
+	sig := <-signal
+	fmt.Println(sig)
+
+	s.logger.Info().Msg("Received SIGINT, shutting down")
+	s.dispatcher.Stop()
+	s.grpc.Stop()
+	s.grpcweb.Close()
+	os.Exit(0)
+
 }

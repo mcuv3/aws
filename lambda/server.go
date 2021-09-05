@@ -13,6 +13,7 @@ import (
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/docker"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
+	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -22,14 +23,13 @@ import (
 )
 
 type LambdaService struct {
-	auth          *auth.AuthInterceptor
-	logger        zerolog.Logger
-	docker        *docker.ContainerDispatcher
-	db            *gorm.DB
-	region        string
-	CapPerInvoque int
-	grpc          *grpc.Server
-	grpcweb       http.Server
+	auth    *auth.AuthInterceptor
+	logger  zerolog.Logger
+	docker  *docker.ContainerDispatcher
+	db      *gorm.DB
+	region  string
+	grpc    *grpc.Server
+	grpcweb http.Server
 	LambdaExecutionManager
 }
 
@@ -42,7 +42,7 @@ func Run(cmd cli.LambdaCmd, l zerolog.Logger) error {
 	}
 	runMigrations(db)
 
-	l.Info().Str("name", db.Dialector.Name()).Msgf("databse %s", db.Debug().Name())
+	l.Info().Str("name", db.Dialector.Name()).Msgf("database %s", db.Debug().Name())
 
 	service := newLambdaService(cmd, db)
 	service.RegisterGRPC()
@@ -70,24 +70,27 @@ func runMigrations(db *gorm.DB) {
 
 func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 	l := helpers.NewLogger()
-
+	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
+		Brokers: []string{"broker:29092"},
+		Topic:   "audit",
+		Verbose: true,
+	})
 	service := LambdaService{
 		auth: &auth.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
 			ServerPrefix:  "/lambda.LambdaService/",
 			PublicMethods: []string{"ReceiveEvents"},
 			Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}},
 		logger: l,
-
 		db:     db,
 		docker: docker.NewContainerDispatcher(cmd.Workers, &docker.DockerRuntime{}),
 		region: cmd.Region,
 		LambdaExecutionManager: LambdaExecutionManager{
-			CapPerInvoque: 10,
+			CapPerInvoke: 10,
 		},
 	}
 
 	s := grpc.NewServer(
-		grpc.UnaryInterceptor(service.auth.Unary()),
+		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditInterceptor.Unary()),
 		grpc.StreamInterceptor(service.auth.Stream()))
 	service.grpc = s
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
