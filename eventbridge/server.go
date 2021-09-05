@@ -6,9 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
 
-	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
@@ -22,8 +20,7 @@ import (
 )
 
 type EventBridgeService struct {
-	auth       *auth.AuthInterceptor
-	Name       auth.Service
+	Name       string
 	logger     zerolog.Logger
 	db         *gorm.DB
 	region     string
@@ -89,27 +86,23 @@ func newEventBridgeService(cmd cli.EventBridgeCmd, db *gorm.DB) EventBridgeServi
 		Topic:      "audit",
 		Brokers:    []string{"broker:29092"},
 	})
+	auth := &interceptors.AuthInterceptor{
+		Issuer:        cmd.Name(),
+		ServerPrefix:  "/eventbridge.EventBridgeService/",
+		PublicMethods: []string{},
+		Logger:        l,
+	}
 
 	service := EventBridgeService{
-		Name:   auth.EventBridge,
-		logger: l,
-		repo:   EventBridgeRepo{db},
-		auth: &auth.AuthInterceptor{
-			Issuer: cmd.Name(),
-			Mannager: &auth.JWTMannger{
-				SecretKey: cmd.Secret,
-				Duration:  time.Hour,
-			},
-			ServerPrefix:  "/eventbridge.EventBridgeService/",
-			PublicMethods: []string{},
-			Logger:        l,
-		},
+		Name:       cmd.Name(),
+		logger:     l,
+		repo:       EventBridgeRepo{db},
 		db:         db,
 		region:     cmd.Region,
 		dispatcher: dispatcher,
 	}
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditInterceptor.Unary()),
+		grpc.ChainUnaryInterceptor(auth.Unary(), auditInterceptor.Unary()),
 		grpc.StreamInterceptor(auditInterceptor.Stream()),
 	)
 	service.grpc = s

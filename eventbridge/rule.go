@@ -15,12 +15,12 @@ import (
 // TODO: test is this rpc call work.
 
 func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRuleRequest) (*aws.CreateRuleResponse, error) {
-	us, err := s.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "401:eventbridge")
 	}
 
-	arn, err := auth.NewArn(s.Name, s.region, us.AccountId, fmt.Sprintf("/rule/%s", req.GetName()))
+	arn, err := auth.NewArn(auth.Service(s.Name), s.region, us.AccountId, fmt.Sprintf("/rule/%s", req.GetName()))
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "500:ARN")
 	}
@@ -118,7 +118,7 @@ func (s *EventBridgeService) UpdateTarget(ctx context.Context, req *aws.UpdateTa
 }
 
 func (s *EventBridgeService) getRuleForUser(ctx context.Context, rulename string) (*model.Rule, error) {
-	us, err := s.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "401:eventbridge-unauthenticated")
 	}

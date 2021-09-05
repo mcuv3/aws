@@ -6,9 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"time"
 
-	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/docker"
@@ -23,7 +21,6 @@ import (
 )
 
 type LambdaService struct {
-	auth    *auth.AuthInterceptor
 	logger  zerolog.Logger
 	docker  *docker.ContainerDispatcher
 	db      *gorm.DB
@@ -75,11 +72,12 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 		Topic:   "audit",
 		Verbose: true,
 	})
+	auth := &interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
+		ServerPrefix:  "/lambda.LambdaService/",
+		PublicMethods: []string{"ReceiveEvents"},
+		SecretKey:     cmd.Secret,
+	}
 	service := LambdaService{
-		auth: &auth.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
-			ServerPrefix:  "/lambda.LambdaService/",
-			PublicMethods: []string{"ReceiveEvents"},
-			Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}},
 		logger: l,
 		db:     db,
 		docker: docker.NewContainerDispatcher(cmd.Workers, &docker.DockerRuntime{}),
@@ -90,8 +88,8 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 	}
 
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(service.auth.Unary(), auditInterceptor.Unary()),
-		grpc.StreamInterceptor(service.auth.Stream()))
+		grpc.ChainUnaryInterceptor(auth.Unary(), auditInterceptor.Unary()),
+		grpc.StreamInterceptor(auth.Stream()))
 	service.grpc = s
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 	service.grpcweb = *grpcweb

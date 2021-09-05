@@ -15,7 +15,7 @@ import (
 func (s *SQSService) CreateQueue(ctx context.Context, req *aws.CreateQueueRequest) (*aws.CreateQueueResponse, error) {
 	queueName := req.GetName()
 
-	us, err := s.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 
 	if err != nil {
 		return nil, s.Error(err, codes.Unauthenticated, "Unable to authenticate")

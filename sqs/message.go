@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/google/uuid"
@@ -12,7 +13,7 @@ import (
 
 func (s *SQSService) SendMessage(ctx context.Context, req *aws.SendMessageRequest) (*aws.SendMessageResponse, error) {
 
-	us, err := s.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 
 	if err != nil {
 		return nil, s.Error(err, codes.Unauthenticated, "Unable to authenticate")
@@ -55,7 +56,7 @@ func (s *SQSService) SendMessage(ctx context.Context, req *aws.SendMessageReques
 
 func (s *SQSService) ReceiveMessage(req *aws.ReceiveMessageRequest, stream aws.SQSService_ReceiveMessageServer) error {
 
-	us, err := s.auth.Authorize(stream.Context(), "")
+	us, err := authInterceptor.Authorize(stream.Context(), "")
 
 	if err != nil {
 		s.logger.Err(err).Str("error:", err.Error())

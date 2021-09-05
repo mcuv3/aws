@@ -6,12 +6,11 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"time"
 
-	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
+	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/rs/zerolog"
@@ -22,13 +21,14 @@ import (
 	"gorm.io/gorm"
 )
 
+var authInterceptor interceptors.AuthInterceptor
+
 func (s *SQSService) Error(err error, code codes.Code, msg string) error {
 	s.logger.Err(err)
 	return status.Errorf(code, msg)
 }
 
 type SQSService struct {
-	auth    *auth.AuthInterceptor
 	logger  zerolog.Logger
 	db      *gorm.DB
 	grpc    *grpc.Server
@@ -73,17 +73,16 @@ func runMigrations(db *gorm.DB) {
 
 func newSqsService(cmd cli.SqsCmd, db *gorm.DB) SQSService {
 	l := helpers.NewLogger()
-	authInterceptor := auth.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
+	authInterceptor = interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
 		ServerPrefix:  "/iam.SQSService/",
-		PublicMethods: []string{},
-		Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}}
+		SecretKey:     cmd.Secret,
+		PublicMethods: []string{}}
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()), grpc.StreamInterceptor(authInterceptor.Stream()))
 
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
 	return SQSService{
-		auth:    &authInterceptor,
 		logger:  l,
 		grpc:    s,
 		grpcweb: *grpcweb,

@@ -17,7 +17,7 @@ import (
 )
 
 func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunctionRequest) (*aws.LambdaResponse, error) {
-	us, err := l.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Unable to authenticate in lambda.")
 	}
@@ -75,7 +75,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 
 func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionResquest) (*aws.LambdaResponse, error) {
 
-	us, err := l.auth.GetUserMetadata(ctx)
+	us, err := auth.GetUserMetadata(ctx)
 
 	if err != nil {
 		return nil, status.Errorf(codes.Unauthenticated, "Unable to authenticate from lambda")

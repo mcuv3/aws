@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
@@ -26,8 +25,8 @@ import (
 type IAMService struct {
 	aws.UnimplementedIAMServiceServer
 	storage *IamRepository
-	auth    *auth.AuthInterceptor
 	logger  zerolog.Logger
+	jwt     JWTMannger
 	grpc    *grpc.Server
 	webgrpc http.Server
 }
@@ -76,14 +75,18 @@ func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
 		Verbose: true,
 	})
 
-	authInterceptor := auth.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
+	authInterceptor := interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
 		ServerPrefix:  "/iam.IAMService/",
 		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
-		Mannager:      &auth.JWTMannger{SecretKey: cmd.Secret, Duration: time.Hour}}
+		SecretKey:     cmd.Secret,
+	}
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()))
 	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
-	return IAMService{storage: &IamRepository{db: db}, logger: logger, auth: &authInterceptor, grpc: s, webgrpc: *webgrpc}
+	return IAMService{storage: &IamRepository{db: db}, jwt: JWTMannger{
+		SecretKey: cmd.Secret,
+		Duration:  time.Hour,
+	}, logger: logger, grpc: s, webgrpc: *webgrpc}
 }
 
 func (s *IAMService) RegisterGRPC() {

@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/MauricioAntonioMartinez/aws/auth"
+	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc/codes"
@@ -28,7 +28,7 @@ func (s *IAMService) RootUserLogin(ctx context.Context, req *aws.RootUserLoginRe
 		return nil, s.Error(isValid, codes.PermissionDenied, "Incorrect Password")
 	}
 
-	token, err := s.auth.GetToken(auth.UserClaims{Username: us.Email, IsRootUser: true, AccountId: us.AccountId})
+	token, err := s.GetTokenForUser(model.UserClaims{Username: us.Email, IsRootUser: true, AccountId: us.AccountId})
 
 	if err != nil {
 		return nil, s.Error(isValid, codes.Internal, "Unable to generate token")
@@ -55,7 +55,7 @@ func (s *IAMService) UserLogin(ctx context.Context, req *aws.UserLoginRequest) (
 		return nil, status.Errorf(codes.PermissionDenied, fmt.Sprint("Incorrect password."))
 	}
 
-	token, err := s.auth.GetToken(auth.UserClaims{Username: us.Name, IsRootUser: false, AccountId: us.AccountId})
+	token, err := s.GetTokenForUser(model.UserClaims{Username: us.Name, IsRootUser: false, AccountId: us.AccountId})
 
 	if err != nil {
 		s.logger.Err(err).Msg("Unable to generate token")
