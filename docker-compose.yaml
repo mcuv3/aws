@@ -68,6 +68,22 @@ services:
     depends_on:
       - eb-db
 
+  cloudtrail:
+    build: 
+      context: .
+      dockerfile: Dockerfile.service
+    container_name: cloudtrail
+    ports:
+      - "6004:6004"
+      - "7004:7004"
+    env_file: ./env/eb.env
+    command: 
+      - "go"
+      - "run"
+      - "cloudtrail/listener.go"
+    volumes:
+      - .:/app
+
   iam-db:
     <<: *defaults-db
     ports: 

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	aws "github.com/MauricioAntonioMartinez/aws/proto"
+	"github.com/golang/protobuf/proto"
 	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/protocol"
 	_ "github.com/segmentio/kafka-go/snappy"
@@ -39,10 +41,11 @@ func (a *AuditInterceptor) Stop() {
 	a.writer.Close()
 }
 
-func (a *AuditInterceptor) publishEvent(key, value string, headers *[]protocol.Header) error {
+func (a *AuditInterceptor) publishEvent(key, value []byte, headers *[]protocol.Header) error {
+
 	err := a.writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte(key),
-		Value: []byte(value),
+		Value: value,
 	})
 	if err != nil {
 		return err
@@ -69,8 +72,24 @@ func (a *AuditInterceptor) audit(key string, ctx context.Context, method string)
 		log.Printf("[AUDIT] %s ", method)
 	}
 	md, _ := metadata.FromIncomingContext(ctx)
-	err := a.publishEvent(key, fmt.Sprintf("%s: %v", method, md), nil)
-	if err != nil && a.verbose {
-		log.Printf("[AUDIT] %s", err)
+	fmt.Println(md)
+	accountId := ""
+	ac := md["accountId"]
+	if len(ac) > 0 {
+		accountId = ac[0]
 	}
+	event := aws.AuditEvent{
+		AccountId: accountId,
+		Method:    method,
+	}
+	if value, err := proto.Marshal(&event); err != nil {
+		a.writer.Logger.Printf("Error %v", err)
+		return
+	} else {
+		err := a.publishEvent([]byte(key), value, nil)
+		if err != nil && a.verbose {
+			log.Printf("[AUDIT] %s", err)
+		}
+	}
+
 }

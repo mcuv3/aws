@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package events;
+
+option go_package = "./;aws";
+
+
+message AuditEvent { 
+    string account_id = 1;
+    string method = 2;
+}

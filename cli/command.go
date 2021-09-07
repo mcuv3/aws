@@ -178,7 +178,6 @@ type EventBridgeCmd struct {
 	Fs               *flag.FlagSet
 }
 
-// start medica 5to piso 517 518 torre de consultorios
 func newEventBridgeCmd() *EventBridgeCmd {
 
 	cmd := &EventBridgeCmd{

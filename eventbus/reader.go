@@ -27,7 +27,7 @@ type ConsumerConfig struct {
 	Brokers    []string
 }
 
-func NewConsumer(config ConsumerConfig, onMessage func(Message)) *Consumer {
+func NewConsumerGroup(config ConsumerConfig, onMessage func(Message)) *Consumer {
 	return &Consumer{
 		id:        config.Identifier,
 		onMessage: onMessage,

@@ -4,15 +4,17 @@ import (
 	"archive/tar"
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/docker"
-	"github.com/MauricioAntonioMartinez/aws/interceptors"
+	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/golang/protobuf/proto"
 )
 
 func d() {
@@ -47,11 +49,24 @@ func d() {
 }
 
 func main() {
-	_ = interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
-		Brokers: []string{"localhost:29092"},
-		Topic:   "audit",
-		Verbose: true,
-	})
+	res := aws.CreateUserRequest{
+		Name:        "Test",
+		Description: "New",
+		Password:    "123",
+		Polices:     []*aws.Policy{},
+	}
+	value, err := proto.Marshal(&res)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(value)
+	newRes := &aws.CreateUserRequest{}
+	err = proto.Unmarshal(value, newRes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(newRes)
+
 }
 
 func dock() {
