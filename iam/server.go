@@ -1,6 +1,7 @@
 package iam
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -19,6 +20,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 )
 
@@ -75,11 +77,11 @@ func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
 		Verbose: true,
 	})
 
-	authInterceptor := interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: logger,
+	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: logger,
 		ServerPrefix:  "/iam.IAMService/",
 		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
 		SecretKey:     cmd.Secret,
-	}
+	})
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()))
 	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
@@ -120,4 +122,8 @@ func (s *IAMService) ServeWeb(port string, serviceName string) error {
 	}
 
 	return nil
+}
+
+func (s *IAMService) Dev(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error) {
+	return &emptypb.Empty{}, nil
 }

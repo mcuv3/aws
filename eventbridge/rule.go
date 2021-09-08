@@ -3,7 +3,6 @@ package eventbridge
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -11,8 +10,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
-
-// TODO: test is this rpc call work.
 
 func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRuleRequest) (*aws.CreateRuleResponse, error) {
 	us, err := auth.GetUserMetadata(ctx)
@@ -39,8 +36,8 @@ func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRule
 		EventPattern:   cron,
 		Targets:        s.GetTargets(req.GetTargets()),
 	}
-	tx := s.db.Save(&rule)
-	if tx.Error != nil {
+	err = repo.createRule(&rule)
+	if err != nil {
 		return nil, status.Errorf(codes.Internal, "500:could-not-save-rule")
 	}
 
@@ -50,7 +47,7 @@ func (s *EventBridgeService) CreateRule(ctx context.Context, req *aws.CreateRule
 }
 
 func (s *EventBridgeService) UpdateRule(ctx context.Context, req *aws.UpdateRuleRequest) (*aws.EventBridgeResponse, error) {
-	rule, err := s.getRuleForUser(ctx, req.GetName())
+	_, err := s.getRuleForUser(ctx, req.GetName())
 	if err != nil {
 		return nil, err
 	}
@@ -70,8 +67,7 @@ func (s *EventBridgeService) UpdateRule(ctx context.Context, req *aws.UpdateRule
 	}
 
 	updates := []string{"description", "service_event_id", "event_pattern", "active"}
-	tx := s.db.Model(&rule).Select(updates).Updates(&newRule)
-	if tx.Error != nil {
+	if err = repo.updateRule(&newRule, updates...); err != nil {
 		return nil, status.Errorf(codes.Internal, "500:could-not-update-rule")
 	}
 
@@ -88,7 +84,7 @@ func (s *EventBridgeService) DeleteRule(ctx context.Context, req *aws.DeleteRule
 		return nil, err
 	}
 
-	if err := s.repo.deleteRule(rule); err != nil {
+	if err := repo.deleteRule(rule); err != nil {
 		return nil, status.Errorf(codes.Internal, "500:rule-not-deleted")
 	}
 
@@ -103,7 +99,7 @@ func (s *EventBridgeService) ChangeRuleState(ctx context.Context, req *aws.Chang
 	}
 	rule.Active = !rule.Active
 
-	if tx := s.db.Save(&rule); tx.Error != nil {
+	if err := repo.updateRule(rule); err != nil {
 		return nil, status.Errorf(codes.Internal, "500:rule-toggle-active")
 	}
 
@@ -127,7 +123,7 @@ func (s *EventBridgeService) getRuleForUser(ctx context.Context, rulename string
 		Name:      rulename,
 		AccountId: us.AccountId,
 	}
-	if err = s.repo.findRule(&rule); err != nil {
+	if err = repo.findRule(&rule); err != nil {
 		return nil, status.Errorf(codes.NotFound, "404:rule")
 	}
 
@@ -151,7 +147,10 @@ func (s *EventBridgeService) getRuleEvents(req rulePayload) (*string, *uint, err
 		return nil, nil, status.Errorf(codes.InvalidArgument, "400:only-one-event")
 	}
 
-	var svcEvent *uint
+	svcEvent := model.ServiceEvent{
+		Name:   svc,
+		Method: svcMethod,
+	}
 	var cronEvent *string
 
 	if isCronEvent {
@@ -159,16 +158,11 @@ func (s *EventBridgeService) getRuleEvents(req rulePayload) (*string, *uint, err
 	}
 
 	if isServiceEvent {
-		svcE, err := s.repo.findServiceEvent(model.ServiceEvent{
-			Name:   strings.ToLower(svc),
-			Method: svcMethod,
-		})
-		if err != nil {
+		if err := repo.findServiceEvent(&svcEvent); err != nil {
 			return nil, nil, status.Errorf(codes.InvalidArgument, "Unknown source or type")
 		}
-		svcEvent = &svcE.ID
 	}
 
-	return cronEvent, svcEvent, nil
+	return cronEvent, &svcEvent.ID, nil
 
 }

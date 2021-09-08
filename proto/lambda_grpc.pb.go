@@ -12,6 +12,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // LambdaServiceClient is the client API for LambdaService service.
@@ -72,7 +73,7 @@ func (c *lambdaServiceClient) SeedLambdaServer(ctx context.Context, in *emptypb.
 }
 
 func (c *lambdaServiceClient) ReceiveEvents(ctx context.Context, in *ReceiveEventRequest, opts ...grpc.CallOption) (LambdaService_ReceiveEventsClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_LambdaService_serviceDesc.Streams[0], "/lambda.LambdaService/ReceiveEvents", opts...)
+	stream, err := c.cc.NewStream(ctx, &LambdaService_ServiceDesc.Streams[0], "/lambda.LambdaService/ReceiveEvents", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -167,8 +168,8 @@ type UnsafeLambdaServiceServer interface {
 	mustEmbedUnimplementedLambdaServiceServer()
 }
 
-func RegisterLambdaServiceServer(s *grpc.Server, srv LambdaServiceServer) {
-	s.RegisterService(&_LambdaService_serviceDesc, srv)
+func RegisterLambdaServiceServer(s grpc.ServiceRegistrar, srv LambdaServiceServer) {
+	s.RegisterService(&LambdaService_ServiceDesc, srv)
 }
 
 func _LambdaService_CreateFunction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -300,7 +301,10 @@ func _LambdaService_DeleteLambda_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
-var _LambdaService_serviceDesc = grpc.ServiceDesc{
+// LambdaService_ServiceDesc is the grpc.ServiceDesc for LambdaService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var LambdaService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "lambda.LambdaService",
 	HandlerType: (*LambdaServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

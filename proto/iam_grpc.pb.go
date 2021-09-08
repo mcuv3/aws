@@ -12,6 +12,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // IAMServiceClient is the client API for IAMService service.
@@ -40,6 +41,7 @@ type IAMServiceClient interface {
 	UserLogin(ctx context.Context, in *UserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	RootUserLogin(ctx context.Context, in *RootUserLoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	SignUp(ctx context.Context, in *SignUpRequest, opts ...grpc.CallOption) (*SignUpResponse, error)
+	Dev(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type iAMServiceClient struct {
@@ -248,6 +250,15 @@ func (c *iAMServiceClient) SignUp(ctx context.Context, in *SignUpRequest, opts .
 	return out, nil
 }
 
+func (c *iAMServiceClient) Dev(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, "/iam.IAMService/Dev", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // IAMServiceServer is the server API for IAMService service.
 // All implementations should embed UnimplementedIAMServiceServer
 // for forward compatibility
@@ -274,6 +285,7 @@ type IAMServiceServer interface {
 	UserLogin(context.Context, *UserLoginRequest) (*LoginResponse, error)
 	RootUserLogin(context.Context, *RootUserLoginRequest) (*LoginResponse, error)
 	SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error)
+	Dev(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 }
 
 // UnimplementedIAMServiceServer should be embedded to have forward compatible implementations.
@@ -346,6 +358,9 @@ func (UnimplementedIAMServiceServer) RootUserLogin(context.Context, *RootUserLog
 func (UnimplementedIAMServiceServer) SignUp(context.Context, *SignUpRequest) (*SignUpResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SignUp not implemented")
 }
+func (UnimplementedIAMServiceServer) Dev(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Dev not implemented")
+}
 
 // UnsafeIAMServiceServer may be embedded to opt out of forward compatibility for this service.
 // Use of this interface is not recommended, as added methods to IAMServiceServer will
@@ -354,8 +369,8 @@ type UnsafeIAMServiceServer interface {
 	mustEmbedUnimplementedIAMServiceServer()
 }
 
-func RegisterIAMServiceServer(s *grpc.Server, srv IAMServiceServer) {
-	s.RegisterService(&_IAMService_serviceDesc, srv)
+func RegisterIAMServiceServer(s grpc.ServiceRegistrar, srv IAMServiceServer) {
+	s.RegisterService(&IAMService_ServiceDesc, srv)
 }
 
 func _IAMService_CreatePolicy_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -754,7 +769,28 @@ func _IAMService_SignUp_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-var _IAMService_serviceDesc = grpc.ServiceDesc{
+func _IAMService_Dev_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IAMServiceServer).Dev(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/iam.IAMService/Dev",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IAMServiceServer).Dev(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// IAMService_ServiceDesc is the grpc.ServiceDesc for IAMService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var IAMService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "iam.IAMService",
 	HandlerType: (*IAMServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -845,6 +881,10 @@ var _IAMService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SignUp",
 			Handler:    _IAMService_SignUp_Handler,
+		},
+		{
+			MethodName: "Dev",
+			Handler:    _IAMService_Dev_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

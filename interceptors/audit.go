@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"github.com/golang/protobuf/proto"
-	"github.com/segmentio/kafka-go"
 	"github.com/segmentio/kafka-go/protocol"
 	_ "github.com/segmentio/kafka-go/snappy"
 	"google.golang.org/grpc"
@@ -16,7 +16,7 @@ import (
 
 type AuditInterceptor struct {
 	verbose bool
-	writer  *kafka.Writer
+	writer  *eventbus.Writer
 }
 
 type AuditInterceptorConfig struct {
@@ -26,7 +26,7 @@ type AuditInterceptorConfig struct {
 }
 
 func NewAuditInterceptor(config AuditInterceptorConfig) *AuditInterceptor {
-	w := kafka.NewWriter(kafka.WriterConfig{
+	w := eventbus.NewWriter(eventbus.WriteConfig{
 		Brokers: config.Brokers,
 		Topic:   config.Topic,
 	})
@@ -43,10 +43,7 @@ func (a *AuditInterceptor) Stop() {
 
 func (a *AuditInterceptor) publishEvent(key, value []byte, headers *[]protocol.Header) error {
 
-	err := a.writer.WriteMessages(context.Background(), kafka.Message{
-		Key:   []byte(key),
-		Value: value,
-	})
+	err := a.writer.WriteMessage([]byte(key), value)
 	if err != nil {
 		return err
 	}
@@ -74,7 +71,8 @@ func (a *AuditInterceptor) audit(key string, ctx context.Context, method string)
 	md, _ := metadata.FromIncomingContext(ctx)
 	fmt.Println(md)
 	accountId := ""
-	ac := md["accountId"]
+	ac := md["accountid"]
+	fmt.Println(md)
 	if len(ac) > 0 {
 		accountId = ac[0]
 	}
@@ -83,7 +81,7 @@ func (a *AuditInterceptor) audit(key string, ctx context.Context, method string)
 		Method:    method,
 	}
 	if value, err := proto.Marshal(&event); err != nil {
-		a.writer.Logger.Printf("Error %v", err)
+		fmt.Printf("Error %v", err)
 		return
 	} else {
 		err := a.publishEvent([]byte(key), value, nil)

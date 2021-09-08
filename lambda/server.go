@@ -57,7 +57,7 @@ func Run(cmd cli.LambdaCmd, l zerolog.Logger) error {
 		return service.ServeWeb(cmd.PortWeb, cmd.Name())
 	}
 
-	return errors.New("Enable either web or grpc or both.")
+	return errors.New("enable either web or grpc or both ")
 }
 
 func runMigrations(db *gorm.DB) {
@@ -72,11 +72,12 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 		Topic:   "audit",
 		Verbose: true,
 	})
-	auth := &interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
+	auth := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: l,
 		ServerPrefix:  "/lambda.LambdaService/",
 		PublicMethods: []string{"ReceiveEvents"},
 		SecretKey:     cmd.Secret,
-	}
+	})
+
 	service := LambdaService{
 		logger: l,
 		db:     db,

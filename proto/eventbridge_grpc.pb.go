@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // EventBridgeServiceClient is the client API for EventBridgeService service.
@@ -115,8 +116,8 @@ type UnsafeEventBridgeServiceServer interface {
 	mustEmbedUnimplementedEventBridgeServiceServer()
 }
 
-func RegisterEventBridgeServiceServer(s *grpc.Server, srv EventBridgeServiceServer) {
-	s.RegisterService(&_EventBridgeService_serviceDesc, srv)
+func RegisterEventBridgeServiceServer(s grpc.ServiceRegistrar, srv EventBridgeServiceServer) {
+	s.RegisterService(&EventBridgeService_ServiceDesc, srv)
 }
 
 func _EventBridgeService_CreateRule_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -209,7 +210,10 @@ func _EventBridgeService_ChangeRuleState_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
-var _EventBridgeService_serviceDesc = grpc.ServiceDesc{
+// EventBridgeService_ServiceDesc is the grpc.ServiceDesc for EventBridgeService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var EventBridgeService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "eventbridge.EventBridgeService",
 	HandlerType: (*EventBridgeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

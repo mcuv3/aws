@@ -37,6 +37,8 @@ service IAMService {
     rpc UserLogin(UserLoginRequest) returns (LoginResponse);
     rpc RootUserLogin(RootUserLoginRequest) returns (LoginResponse);
     rpc SignUp(SignUpRequest) returns (SignUpResponse);
+    rpc Dev(google.protobuf.Empty) returns (google.protobuf.Empty) {};
+
 }
 
 message Policy {

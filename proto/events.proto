@@ -9,3 +9,11 @@ message AuditEvent {
     string account_id = 1;
     string method = 2;
 }
+
+message InvokeLambdaEvent { 
+
+}
+
+message SendMessageToQueueEvent { 
+
+}

@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // SQSServiceClient is the client API for SQSService service.
@@ -51,7 +52,7 @@ func (c *sQSServiceClient) SendMessage(ctx context.Context, in *SendMessageReque
 }
 
 func (c *sQSServiceClient) ReceiveMessage(ctx context.Context, in *ReceiveMessageRequest, opts ...grpc.CallOption) (SQSService_ReceiveMessageClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_SQSService_serviceDesc.Streams[0], "/sqs.SQSService/ReceiveMessage", opts...)
+	stream, err := c.cc.NewStream(ctx, &SQSService_ServiceDesc.Streams[0], "/sqs.SQSService/ReceiveMessage", opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +139,8 @@ type UnsafeSQSServiceServer interface {
 	mustEmbedUnimplementedSQSServiceServer()
 }
 
-func RegisterSQSServiceServer(s *grpc.Server, srv SQSServiceServer) {
-	s.RegisterService(&_SQSService_serviceDesc, srv)
+func RegisterSQSServiceServer(s grpc.ServiceRegistrar, srv SQSServiceServer) {
+	s.RegisterService(&SQSService_ServiceDesc, srv)
 }
 
 func _SQSService_CreateQueue_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -235,7 +236,10 @@ func _SQSService_DeleteQueue_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
-var _SQSService_serviceDesc = grpc.ServiceDesc{
+// SQSService_ServiceDesc is the grpc.ServiceDesc for SQSService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var SQSService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "sqs.SQSService",
 	HandlerType: (*SQSServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

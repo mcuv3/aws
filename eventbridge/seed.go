@@ -28,7 +28,7 @@ func (s *EventBridgeService) Seed() error {
 
 	for _, service := range services {
 		for _, method := range service.Methods {
-			s.db.Create(&model.ServiceEvent{
+			repo.createServiceEvent(&model.ServiceEvent{
 				Path:   fmt.Sprintf("%s/%s", service.Name, method),
 				Name:   service.Alias,
 				Method: method,

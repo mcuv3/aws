@@ -73,10 +73,10 @@ func runMigrations(db *gorm.DB) {
 
 func newSqsService(cmd cli.SqsCmd, db *gorm.DB) SQSService {
 	l := helpers.NewLogger()
-	authInterceptor = interceptors.AuthInterceptor{Issuer: cmd.Name(), Logger: l,
+	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: l,
 		ServerPrefix:  "/iam.SQSService/",
 		SecretKey:     cmd.Secret,
-		PublicMethods: []string{}}
+		PublicMethods: []string{}})
 
 	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()), grpc.StreamInterceptor(authInterceptor.Stream()))
 

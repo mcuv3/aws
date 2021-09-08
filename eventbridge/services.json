@@ -2,7 +2,7 @@
   {
     "alias": "iam",
     "name": "/iam.IAMService",
-    "methods": ["RootUserLogin", "CreateUser"]
+    "methods": ["RootUserLogin", "CreateUser", "Dev"]
   },
   {
     "alias": "lambda",

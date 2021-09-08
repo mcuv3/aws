@@ -34,6 +34,10 @@ type UserMetadata struct {
 }
 
 type AuthInterceptor struct {
+	config AuthInterceptorConfig
+}
+
+type AuthInterceptorConfig struct {
 	Issuer        string
 	Logger        zerolog.Logger
 	PublicMethods []string
@@ -41,8 +45,8 @@ type AuthInterceptor struct {
 	SecretKey     string
 }
 
-func NewAuthInterceptor(SecretKey string) *AuthInterceptor {
-	return &AuthInterceptor{SecretKey: SecretKey}
+func NewAuthInterceptor(config AuthInterceptorConfig) *AuthInterceptor {
+	return &AuthInterceptor{config: config}
 }
 
 func GetUserMetadata(ctx context.Context) (*UserMetadata, error) {
@@ -71,21 +75,21 @@ func (a *AuthInterceptor) validate(token string) (*UserClaims, error) {
 
 	tk, err := jwt.ParseWithClaims(token, &UserClaims{}, func(token *jwt.Token) (interface{}, error) {
 		if ok, _ := token.Method.(*jwt.SigningMethodHMAC); ok == nil {
-			a.Logger.Err(errors.New("invalid token")).Msg("invalid token was provided")
+			a.config.Logger.Err(errors.New("invalid token")).Msg("invalid token was provided")
 			return nil, fmt.Errorf("invalid token")
 		}
-		return []byte(a.SecretKey), nil
+		return []byte(a.config.SecretKey), nil
 	})
 
 	if err != nil {
-		a.Logger.Err(err).Msg("Token with an invalid signature.")
+		a.config.Logger.Err(err).Msg("Token with an invalid signature.")
 		return nil, err
 	}
 
 	claims, ok := tk.Claims.(*UserClaims)
 
 	if !ok {
-		a.Logger.Info().Str("token", tk.Raw).Msg("The token does not have a valid structure")
+		a.config.Logger.Info().Str("token", tk.Raw).Msg("The token does not have a valid structure")
 		return nil, errors.New("not a valid structure")
 	}
 
@@ -119,7 +123,7 @@ func (a *AuthInterceptor) Authorize(ctx context.Context, method string) (*UserCl
 func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 
-		a.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
+		a.config.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
 
 		var claims *UserClaims
 		var err error
@@ -127,8 +131,8 @@ func (a *AuthInterceptor) Unary() grpc.UnaryServerInterceptor {
 
 		fmt.Println(info.FullMethod)
 
-		for _, method := range a.PublicMethods {
-			if fmt.Sprintf("%s%s", a.ServerPrefix, method) == info.FullMethod {
+		for _, method := range a.config.PublicMethods {
+			if fmt.Sprintf("%s%s", a.config.ServerPrefix, method) == info.FullMethod {
 				skipAuth = true
 			}
 		}
@@ -161,14 +165,14 @@ func (a *AuthInterceptor) Stream() grpc.StreamServerInterceptor {
 			return handler(srv, stream)
 		}
 
-		a.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
+		a.config.Logger.Info().Bool("validating", true).Msg("Validating incoming request")
 
 		var claims *UserClaims
 		var err error
 		skipAuth := false
 
-		for _, method := range a.PublicMethods {
-			if fmt.Sprintf("%s%s", a.ServerPrefix, method) == info.FullMethod {
+		for _, method := range a.config.PublicMethods {
+			if fmt.Sprintf("%s%s", a.config.ServerPrefix, method) == info.FullMethod {
 				skipAuth = true
 			}
 		}
