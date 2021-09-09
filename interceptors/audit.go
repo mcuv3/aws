@@ -43,7 +43,10 @@ func (a *AuditInterceptor) Stop() {
 
 func (a *AuditInterceptor) publishEvent(key, value []byte, headers *[]protocol.Header) error {
 
-	err := a.writer.WriteMessage([]byte(key), value)
+	err := a.writer.WriteMessage(eventbus.Message{
+		Key:   key,
+		Value: value,
+	})
 	if err != nil {
 		return err
 	}

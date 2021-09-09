@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/segmentio/kafka-go"
-	"github.com/segmentio/kafka-go/protocol"
 )
 
 type Writer struct {
@@ -26,12 +25,8 @@ func NewWriter(config WriteConfig) *Writer {
 	}
 }
 
-func (w *Writer) WriteMessage(key, value []byte, headers ...protocol.Header) error {
-	return w.kafka.WriteMessages(context.Background(), kafka.Message{
-		Key:     key,
-		Value:   value,
-		Headers: headers,
-	})
+func (w *Writer) WriteMessage(msg Message) error {
+	return w.kafka.WriteMessages(context.Background(), kafka.Message(msg))
 }
 
 func (w *Writer) Close() {

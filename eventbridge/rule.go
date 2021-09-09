@@ -3,6 +3,7 @@ package eventbridge
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -148,7 +149,7 @@ func (s *EventBridgeService) getRuleEvents(req rulePayload) (*string, *uint, err
 	}
 
 	svcEvent := model.ServiceEvent{
-		Name:   svc,
+		Name:   strings.ToLower(svc),
 		Method: svcMethod,
 	}
 	var cronEvent *string

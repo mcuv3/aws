@@ -11,9 +11,13 @@ message AuditEvent {
 }
 
 message InvokeLambdaEvent { 
-
+    string arn = 1;
+    string account_id = 2;
+    string payload  = 3;
 }
 
 message SendMessageToQueueEvent { 
-
+    string arn = 1;
+    string account_id = 2;
+    string payload  = 3;
 }

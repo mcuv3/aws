@@ -1,6 +1,8 @@
 package eventbridge
 
 import (
+	"database/sql"
+
 	"github.com/MauricioAntonioMartinez/aws/model"
 	"gorm.io/gorm"
 )
@@ -32,11 +34,24 @@ func (e *EventBridgeRepo) findRules(where model.Rule, rules *[]model.Rule) error
 	return nil
 }
 
-func (e *EventBridgeRepo) findRulesQuery(query string, rules *[]model.Rule, args ...interface{}) error {
-	if tx := e.db.Where(query, args...).Find(&rules); tx.Error != nil {
-		return tx.Error
-	}
-	return nil
+// func (e *EventBridgeRepo) findRulesQuery(query string, rules *[]model.Rule, args ...interface{}) error {
+// 	if tx := e.db.Where(query, args...).Find(&rules); tx.Error != nil {
+// 		return tx.Error
+// 	}
+// 	return nil
+// }
+
+func (e *EventBridgeRepo) findRulesWithTargets(accountId string, serviceEventID *uint) (*sql.Rows, error) {
+	// if tx := e.db.Joins("rules", e.db.Where(&where)).Find(targets); tx.Error != nil {
+	// 	return tx.Error
+	// }
+	// return nil
+	rows, err := e.db.Table("targets").
+		Select("targets.rule_id,targets.type,targets.arn").
+		Joins("inner join rules on rules.id = targets.rule_id").
+		Where("rules.account_id = ? AND rules.service_event_id = ?", accountId, *serviceEventID).
+		Rows()
+	return rows, err
 }
 
 func (e *EventBridgeRepo) deleteRule(rule *model.Rule) error {

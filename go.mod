@@ -10,6 +10,7 @@ require (
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/form3tech-oss/jwt-go v3.2.5+incompatible
+	github.com/fullstorydev/grpcui v1.1.0 // indirect
 	github.com/go-redis/redis/v8 v8.11.3
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.2
