@@ -21,7 +21,7 @@ type AuditInterceptor struct {
 
 type AuditInterceptorConfig struct {
 	Brokers []string
-	Topic   string
+	Topic   eventbus.Topic
 	Verbose bool
 }
 

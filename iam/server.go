@@ -7,10 +7,12 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -22,6 +24,14 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
+)
+
+const (
+	ServerPrefix = "/iam.IAMService/"
+)
+
+var (
+	PublicMethods = []string{"RootUserLogin", "SignUp", "UserLogin"}
 )
 
 type IAMService struct {
@@ -71,15 +81,16 @@ func runMigrations(db *gorm.DB) {
 
 func newIamService(cmd cli.IamCmd, db *gorm.DB) IAMService {
 	logger := helpers.NewLogger()
+	brokers := strings.Split(cmd.Brokers, ",")
 	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
-		Brokers: []string{"broker:29092"},
-		Topic:   "audit",
+		Brokers: brokers,
+		Topic:   eventbus.Audit,
 		Verbose: true,
 	})
 
 	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: logger,
-		ServerPrefix:  "/iam.IAMService/",
-		PublicMethods: []string{"RootUserLogin", "SignUp", "UserLogin"},
+		ServerPrefix:  ServerPrefix,
+		PublicMethods: PublicMethods,
 		SecretKey:     cmd.Secret,
 	})
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()))

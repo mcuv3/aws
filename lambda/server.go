@@ -6,10 +6,12 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
+	"github.com/MauricioAntonioMartinez/aws/container"
 	database "github.com/MauricioAntonioMartinez/aws/db"
-	"github.com/MauricioAntonioMartinez/aws/docker"
+	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -20,15 +22,24 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ServerPrefix = "/lambda.LambdaService/"
+)
+
 type LambdaService struct {
 	logger  zerolog.Logger
-	docker  *docker.ContainerDispatcher
 	db      *gorm.DB
 	region  string
 	grpc    *grpc.Server
 	grpcweb http.Server
-	LambdaExecutionManager
 }
+
+var (
+	repo          LambdaRepo
+	execution     LambdaExecutionManager
+	dispatcher    *container.ContainerDispatcher
+	PublicMethods = []string{"ReceiveEvents"}
+)
 
 func Run(cmd cli.LambdaCmd, l zerolog.Logger) error {
 
@@ -38,11 +49,14 @@ func Run(cmd cli.LambdaCmd, l zerolog.Logger) error {
 		return err
 	}
 	runMigrations(db)
+	repo = LambdaRepo{db}
 
 	l.Info().Str("name", db.Dialector.Name()).Msgf("database %s", db.Debug().Name())
 
 	service := newLambdaService(cmd, db)
 	service.RegisterGRPC()
+	go listenEvents()
+	startLambdaExecutions(cmd)
 
 	if cmd.EnableGrpc && cmd.EnableWeb {
 		go service.ServeGrpc(cmd.PortGrpc, cmd.Name())
@@ -67,25 +81,22 @@ func runMigrations(db *gorm.DB) {
 
 func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 	l := helpers.NewLogger()
+	brokers := strings.Split(cmd.Brokers, ",")
 	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
-		Brokers: []string{"broker:29092"},
-		Topic:   "audit",
+		Brokers: brokers,
+		Topic:   eventbus.Audit,
 		Verbose: true,
 	})
 	auth := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: l,
-		ServerPrefix:  "/lambda.LambdaService/",
-		PublicMethods: []string{"ReceiveEvents"},
+		ServerPrefix:  ServerPrefix,
+		PublicMethods: PublicMethods,
 		SecretKey:     cmd.Secret,
 	})
 
 	service := LambdaService{
 		logger: l,
 		db:     db,
-		docker: docker.NewContainerDispatcher(cmd.Workers, &docker.DockerRuntime{}),
 		region: cmd.Region,
-		LambdaExecutionManager: LambdaExecutionManager{
-			CapPerInvoke: 10,
-		},
 	}
 
 	s := grpc.NewServer(
@@ -96,7 +107,6 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 	service.grpcweb = *grpcweb
 
 	service.setRuntimes()
-	service.docker.Start()
 
 	return service
 }
@@ -132,4 +142,17 @@ func (s *LambdaService) ServeWeb(port string, serviceName string) error {
 	}
 
 	return nil
+}
+
+func listenEvents() {
+	lis := newLambdaListener()
+	lis.Start()
+}
+
+func startLambdaExecutions(cmd cli.LambdaCmd) {
+	dispatcher = container.NewContainerDispatcher(cmd.Workers, &container.DockerRuntime{})
+	execution = LambdaExecutionManager{
+		CapPerInvoke: cmd.EventsPerInvoke,
+	}
+	dispatcher.Start()
 }

@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
+	"github.com/MauricioAntonioMartinez/aws/cloudtrail"
 	"github.com/MauricioAntonioMartinez/aws/eventbridge"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/iam"
@@ -53,7 +54,12 @@ func main() {
 	case "eventbridge":
 		r := c.(*cli.EventBridgeCmd)
 		if err = eventbridge.Run(*r, l); err != nil {
-			l.Fatal().Msg("Unable to start lambda service.")
+			l.Fatal().Msg("Unable to start eventbridge service.")
+		}
+	case "cloudtrail":
+		r := c.(*cli.CloudTrailCmd)
+		if err = cloudtrail.Run(*r, l); err != nil {
+			l.Fatal().Msg("Unable to start cloudtrail service.")
 		}
 	}
 

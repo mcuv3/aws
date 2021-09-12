@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"path"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/MauricioAntonioMartinez/aws/auth"
-	"github.com/MauricioAntonioMartinez/aws/docker"
+	"github.com/MauricioAntonioMartinez/aws/container"
 	"github.com/MauricioAntonioMartinez/aws/model"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
 	"google.golang.org/grpc/codes"
@@ -29,7 +28,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 	if tx.Error != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to find runtime")
 	}
-	path.Base(req.GetHandler())
+
 	ext := path.Ext(req.GetHandler())
 	p := strings.Replace(req.GetHandler(), ext, "", 1)
 
@@ -63,7 +62,7 @@ func (l *LambdaService) CreateFunction(ctx context.Context, req *aws.CreateFunct
 	CMD ["%s", "runtime.%s"]
 	`, runtime.Image, req.GetCode(), p, runtime.Extension, runtime.Activator, runtime.Extension)
 
-	l.docker.BuildImage(docker.BuildImageOptions{
+	dispatcher.BuildImage(container.BuildImageOptions{
 		ImageName:  image,
 		BaseImage:  runtime.Image,
 		Code:       req.GetCode(),
@@ -91,17 +90,16 @@ func (l *LambdaService) TestFunction(ctx context.Context, req *aws.TestFunctionR
 		return nil, status.Errorf(codes.NotFound, "Function not found")
 	}
 
-	env := map[string]interface{}{
-		"EVENT_DATA": req.GetEventData(),
-		"HANDLER":    res.Handler,
+	if err := execution.Run(LambdaExecutionConfig{
+		ID:      res.Arn,
+		image:   res.Image,
+		ram:     int64(res.Memory),
+		data:    req.GetEventData(),
+		handler: res.Handler,
+	}); err != nil {
+		l.logger.Err(err)
+		return nil, status.Errorf(codes.Internal, "Unable to start the execution.")
 	}
-
-	l.docker.RunContainer(docker.RunContainerOptions{
-		Image:       res.Image,
-		Ram:         int64(res.Memory),
-		Environment: env,
-		Name:        fmt.Sprintf("%s-%s-%d", us.AccountId, res.Name, time.Now().Unix()),
-	})
 
 	return &aws.LambdaResponse{
 		Message: fmt.Sprintf("Ran  at %s", time.Now()),
@@ -119,33 +117,15 @@ func (l *LambdaService) InvokeFunction(ctx context.Context, req *aws.InvoqueFunc
 		return nil, status.Errorf(codes.NotFound, "Function not found")
 	}
 
-	freeExecution := l.getAvaibleExecution(res.Arn)
-
-	if freeExecution == nil {
-		lx, err := l.newLambdaExecution(res.Arn)
-
-		if err != nil {
-			return nil, status.Errorf(codes.Internal, "Something went wrong running the lambda")
-		}
-
-		env := map[string]interface{}{
-			"EVENT_DATA": req.GetEventData(),
-			"HANDLER":    res.Handler,
-			"HOST":       "localhost:6003",
-			"HASH":       lx.Hash,
-			"LISTEN":     true,
-		}
-
-		l.docker.RunContainer(docker.RunContainerOptions{
-			Image:       res.Image,
-			Ram:         int64(res.Memory),
-			Environment: env,
-			Name:        strconv.Itoa(int(time.Now().Unix())),
-		})
-	} else {
-		go func() {
-			freeExecution.Events <- req.GetEventData()
-		}()
+	if err := execution.Run(LambdaExecutionConfig{
+		ID:      res.Arn,
+		image:   res.Image,
+		ram:     int64(res.Memory),
+		data:    req.GetEventData(),
+		handler: res.Handler,
+	}); err != nil {
+		l.logger.Err(err)
+		return nil, status.Errorf(codes.Internal, "Unable to start the execution.")
 	}
 
 	return &aws.LambdaResponse{
@@ -156,7 +136,7 @@ func (l *LambdaService) InvokeFunction(ctx context.Context, req *aws.InvoqueFunc
 
 func (l *LambdaService) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.LambdaService_ReceiveEventsServer) error {
 
-	execution := l.LambdaExecutionManager.getExecution(req.GetHash())
+	execution := execution.getExecutionByHash(req.GetHash())
 
 	if execution == nil {
 		return status.Errorf(codes.Aborted, "Invalid or unknown hash")
@@ -164,7 +144,7 @@ func (l *LambdaService) ReceiveEvents(req *aws.ReceiveEventRequest, stream aws.L
 
 	fn := model.Function{}
 
-	tx := l.db.Where("arn = ?", execution.FuncArn).First(&fn)
+	tx := l.db.Where("arn = ?", execution.ID).First(&fn)
 
 	if tx.Error != nil {
 		return status.Errorf(codes.NotFound, "Function not found")

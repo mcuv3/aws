@@ -47,7 +47,7 @@ func (e *EventBridgeRepo) findRulesWithTargets(accountId string, serviceEventID 
 	// }
 	// return nil
 	rows, err := e.db.Table("targets").
-		Select("targets.rule_id,targets.type,targets.arn").
+		Select("targets.rule_id,targets.type,targets.arn,rules.arn,rules.event_pattern").
 		Joins("inner join rules on rules.id = targets.rule_id").
 		Where("rules.account_id = ? AND rules.service_event_id = ?", accountId, *serviceEventID).
 		Rows()

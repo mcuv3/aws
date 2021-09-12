@@ -28,7 +28,7 @@ func (s *SQSService) CreateQueue(ctx context.Context, req *aws.CreateQueueReques
 	conf := req.GetConf()
 
 	if string(conf.DeliveryDelayTime) == "" || string(conf.MessageRetentionTime) == "" || string(conf.VisibilityTime) == "" {
-		return nil, s.Error(errors.New("Invalid configuration"), codes.InvalidArgument, "Invalid configuration please check.")
+		return nil, s.Error(errors.New("invalid configuration"), codes.InvalidArgument, "Invalid configuration please check.")
 	}
 
 	arn, err := auth.NewArn(auth.SQS, auth.US_EAST_1, us.AccountId, fmt.Sprintf("/queue/%s", queueName))

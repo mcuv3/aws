@@ -23,7 +23,7 @@ type Consumer struct {
 type ConsumerConfig struct {
 	Identifier string
 	Verbose    bool
-	Topic      string
+	Topic      Topic
 	Brokers    []string
 }
 
@@ -34,7 +34,7 @@ func NewConsumerGroup(config ConsumerConfig, onMessage func(Message)) *Consumer 
 		config:    config,
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers: config.Brokers,
-			Topic:   config.Topic,
+			Topic:   string(config.Topic),
 			// Partition: 0,
 			MinBytes: 10e3, // 10KB
 			GroupID:  config.Identifier,

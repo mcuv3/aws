@@ -64,7 +64,6 @@ services:
     env_file: ./env/eb.env
     volumes:
       - .:/app
-      - /var/run/docker.sock:/var/run/docker.sock
     depends_on:
       - eb-db
 
@@ -76,13 +75,11 @@ services:
     ports:
       - "6004:6004"
       - "7004:7004"
-    env_file: ./env/eb.env
-    command: 
-      - "go"
-      - "run"
-      - "cloudtrail/listener.go"
+    env_file: ./env/cloudtrail.env
     volumes:
       - .:/app
+    depends_on:
+      - cloudtrail-db
 
   iam-db:
     <<: *defaults-db
@@ -116,9 +113,18 @@ services:
     volumes:
       - eb-data:/var/lib/postgresql/data
 
+  cloudtrail-db:
+    <<: *defaults-db
+    container_name: cloudtrail-db
+    ports: 
+      - "8004:5432"
+    volumes:
+      - cloudtrail-data:/var/lib/postgresql/data
+
 
 volumes:
   sqs-data:
   iam-data:
   lambda-data:
   eb-data:
+  cloudtrail-data:

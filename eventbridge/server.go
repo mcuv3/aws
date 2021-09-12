@@ -6,9 +6,11 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -19,6 +21,15 @@ import (
 	"gorm.io/gorm"
 )
 
+var (
+	repo          EventBridgeRepo
+	PublicMethods = []string{}
+)
+
+const (
+	ServerPrefix = "/eventbridge.EventBridgeService/"
+)
+
 type EventBridgeService struct {
 	Name       string
 	logger     zerolog.Logger
@@ -27,10 +38,6 @@ type EventBridgeService struct {
 	grpcweb    http.Server
 	dispatcher *EventBridgeDispatcher
 }
-
-var (
-	repo EventBridgeRepo
-)
 
 func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 
@@ -52,7 +59,7 @@ func Run(cmd cli.EventBridgeCmd, l zerolog.Logger) error {
 	// 	fmt.Println(err)
 	// 	return err
 	// }
-	go listenEvents()
+	go listenEvents(cmd)
 	go service.closeListener()
 
 	if cmd.EnableGrpc && cmd.EnableWeb {
@@ -96,15 +103,16 @@ func (s *EventBridgeService) registerGRPC() {
 }
 
 func getInterceptors(cmd cli.EventBridgeCmd) ([]grpc.UnaryServerInterceptor, []grpc.StreamServerInterceptor) {
+	brokers := strings.Split(cmd.Brokers, ",")
 	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
-		Brokers: []string{"broker:29092"},
-		Topic:   "audit",
+		Brokers: brokers,
+		Topic:   eventbus.Audit,
 		Verbose: true,
 	})
 	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{
 		Issuer:        cmd.Name(),
-		ServerPrefix:  "/eventbridge.EventBridgeService/",
-		PublicMethods: []string{},
+		ServerPrefix:  ServerPrefix,
+		PublicMethods: PublicMethods,
 		Logger:        helpers.NewLogger(),
 		SecretKey:     cmd.Secret,
 	})
@@ -137,12 +145,13 @@ func (s *EventBridgeService) serveWeb(port, serviceName string) error {
 	return nil
 }
 
-func listenEvents() {
+func listenEvents(cmd cli.EventBridgeCmd) {
+	brokers := strings.Split(cmd.Brokers, ",")
 	dispatcher := newEventBridgeDispatcher(EventBridgeDispatcherConfig{
-		Identifier: "eventBridge",
+		Identifier: cmd.Name(),
 		Verbose:    false,
-		Topic:      "audit",
-		Brokers:    []string{"broker:29092"},
+		Topic:      eventbus.Audit,
+		Brokers:    brokers,
 	})
 	dispatcher.Start()
 }

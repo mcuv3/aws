@@ -1,4 +1,4 @@
-FROM mcuve/aws-base:latest
+FROM mcuve/aws-base:v2
 
 EXPOSE 50051
 

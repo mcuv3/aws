@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package cloudtrail;
+import "google/protobuf/timestamp.proto";
+
+option go_package = "./;aws";
+
+
+message GetEventsRequest  {}
+
+
+message CloudTrailEvent {
+    string method = 1;
+    google.protobuf.Timestamp timestamp = 2;
+}
+
+
+service CloudTrailService { 
+    rpc GetEvents(GetEventsRequest) returns (stream CloudTrailEvent) {};
+}

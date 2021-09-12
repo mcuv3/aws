@@ -7,19 +7,20 @@ import (
 
 func Parse(args []string) (*Command, error) {
 	if len(args) < 2 {
-		return nil, errors.New("You need to specify a service (sqs,iam,lambda)")
+		return nil, errors.New("you need to specify a service (sqs,iam,lambda)")
 	}
 
-	cmds := []Command{
+	commands := []Command{
 		newSqsCmd(),
 		newLambdaCmd(),
 		newIamCmd(),
 		newEventBridgeCmd(),
+		newCloudTrailCmd(),
 	}
 
 	service := os.Args[1]
 
-	for _, cmd := range cmds {
+	for _, cmd := range commands {
 		if cmd.Name() == service {
 			return &cmd, cmd.init(os.Args[2:])
 		}

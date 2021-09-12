@@ -12,13 +12,13 @@ type Writer struct {
 
 type WriteConfig struct {
 	Brokers []string
-	Topic   string
+	Topic   Topic
 }
 
 func NewWriter(config WriteConfig) *Writer {
 	kafka := kafka.NewWriter(kafka.WriterConfig{
 		Brokers: config.Brokers,
-		Topic:   config.Topic,
+		Topic:   string(config.Topic),
 	})
 	return &Writer{
 		kafka: kafka,

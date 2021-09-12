@@ -13,10 +13,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
-
-
-func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) (*model.User, error) {
+func (storage *IamRepository) CreateUser(us aws.User, password, accountId string) (*model.User, error) {
 
 	encrypted, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 
@@ -24,14 +21,14 @@ func (storage *IamRepository) CreateUser(us aws.User,password,accountId string) 
 		return nil, err
 	}
 
-	arn,_ := auth.NewArn(auth.IAM,"",accountId,fmt.Sprintf("/user/%s",us.Name))
+	arn, _ := auth.NewArn(auth.IAM, "", accountId, fmt.Sprintf("/user/%s", us.Name))
 
 	user := model.User{
-	Password: string(encrypted),
-	Arn: arn.String(),	
-	Polices: model.PolicyToModel(us.Policies,accountId),
-	Description: us.Description, Name: us.Name,
-	 AccountId: accountId}
+		Password:    string(encrypted),
+		Arn:         arn.String(),
+		Polices:     model.PolicyToModel(us.Policies, accountId),
+		Description: us.Description, Name: us.Name,
+		AccountId: accountId}
 
 	res := storage.db.Omit("AccessKeys").Create(&user)
 
@@ -69,11 +66,11 @@ func (storage *IamRepository) CreateRootUser(email string, password string, conf
 
 }
 
-func (storage *IamRepository) DeleteUser(id uint32,accountId string) error {
+func (storage *IamRepository) DeleteUser(id uint32, accountId string) error {
 
-	tx  := storage.db.Where("account_id = ? AND id = ?",accountId,id)
+	tx := storage.db.Where("account_id = ? AND id = ?", accountId, id)
 
-	if tx.Error != nil { 
+	if tx.Error != nil {
 		return tx.Error
 	}
 	return nil
@@ -86,7 +83,7 @@ func (storage *IamRepository) FindRootUser(query string, args ...interface{}) (*
 
 	if tx.Error != nil {
 		return nil, tx.Error
-	} 
+	}
 
 	return us, nil
 }
@@ -96,35 +93,35 @@ func (storage *IamRepository) FindUser(query string, args ...interface{}) (*mode
 
 	tx := storage.db.Where(query, args...).First(&us)
 
-	
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
 	return &us, nil
-} 
+}
 
-func (storage *IamRepository) UpdateUser(accountId string , updated *aws.User) (*model.User, error) {
+func (storage *IamRepository) UpdateUser(accountId string, updated *aws.User) (*model.User, error) {
 
-	us,err  := storage.FindUser("account_id = ? AND id = ?",accountId,updated.Id)
+	us, err := storage.FindUser("account_id = ? AND id = ?", accountId, updated.Id)
 
-	if err !=nil { 
-		return nil,err
+	if err != nil {
+		return nil, err
 	}
 
 	arn := us.Arn
 
-	if us.Name != updated.Name { 
-		newArn,err := auth.NewArn(auth.IAM,"",accountId,fmt.Sprintf("/user/%s",us.Name))
-		if err !=nil { return nil, err }
+	if us.Name != updated.Name {
+		newArn, err := auth.NewArn(auth.IAM, "", accountId, fmt.Sprintf("/user/%s", us.Name))
+		if err != nil {
+			return nil, err
+		}
 		arn = newArn.String()
 	}
 
-
 	user := model.User{
-		Arn: arn,	
+		Arn:         arn,
 		Description: us.Description,
-		Name: us.Name,
-		AccountId: accountId}
+		Name:        us.Name,
+		AccountId:   accountId}
 
 	res := storage.db.Omit("AccessKeys").Create(&user)
 
