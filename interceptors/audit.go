@@ -2,6 +2,7 @@ package interceptors
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -55,19 +56,21 @@ func (a *AuditInterceptor) publishEvent(key, value []byte, headers *[]protocol.H
 
 func (a *AuditInterceptor) Unary() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-		a.audit("unarycall", ctx, info.FullMethod)
+		a.audit("unarycall", ctx, info.FullMethod, req)
+		data, _ := json.Marshal(req)
+		fmt.Println("json ->", string(data))
 		return handler(ctx, req)
 	}
 }
 
 func (a *AuditInterceptor) Stream() grpc.StreamServerInterceptor {
 	return func(srv interface{}, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-		a.audit("streamcall", stream.Context(), info.FullMethod)
+		a.audit("streamcall", stream.Context(), info.FullMethod, nil)
 		return handler(srv, stream)
 	}
 }
 
-func (a *AuditInterceptor) audit(key string, ctx context.Context, method string) {
+func (a *AuditInterceptor) audit(key string, ctx context.Context, method string, req interface{}) {
 	if a.verbose {
 		log.Printf("[AUDIT] %s ", method)
 	}
@@ -79,9 +82,11 @@ func (a *AuditInterceptor) audit(key string, ctx context.Context, method string)
 	if len(ac) > 0 {
 		accountId = ac[0]
 	}
+	payload, _ := json.Marshal(req)
 	event := aws.AuditEvent{
 		AccountId: accountId,
 		Method:    method,
+		Payload:   string(payload),
 	}
 	if value, err := proto.Marshal(&event); err != nil {
 		fmt.Printf("Error %v", err)

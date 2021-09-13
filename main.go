@@ -40,7 +40,6 @@ func main() {
 		if err = sqs.Run(*r, l); err != nil {
 			l.Fatal().Msg("Unable to start sqs service.")
 		}
-		break
 	case "iam":
 		r := c.(*cli.IamCmd)
 		if err = iam.Run(*r, l); err != nil {
@@ -59,6 +58,7 @@ func main() {
 	case "cloudtrail":
 		r := c.(*cli.CloudTrailCmd)
 		if err = cloudtrail.Run(*r, l); err != nil {
+			l.Err(err)
 			l.Fatal().Msg("Unable to start cloudtrail service.")
 		}
 	}

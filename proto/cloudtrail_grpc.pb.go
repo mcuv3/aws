@@ -19,6 +19,9 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CloudTrailServiceClient interface {
 	GetEvents(ctx context.Context, in *GetEventsRequest, opts ...grpc.CallOption) (CloudTrailService_GetEventsClient, error)
+	CreateTrail(ctx context.Context, in *CreateTrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error)
+	UpdateTrail(ctx context.Context, in *CloudTrailConfig, opts ...grpc.CallOption) (*UpdateTrailResponse, error)
+	DeleteTrail(ctx context.Context, in *DeleteTrailRequest, opts ...grpc.CallOption) (*DeleteTrailResponse, error)
 }
 
 type cloudTrailServiceClient struct {
@@ -61,11 +64,41 @@ func (x *cloudTrailServiceGetEventsClient) Recv() (*CloudTrailEvent, error) {
 	return m, nil
 }
 
+func (c *cloudTrailServiceClient) CreateTrail(ctx context.Context, in *CreateTrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error) {
+	out := new(CreateTrailResponse)
+	err := c.cc.Invoke(ctx, "/cloudtrail.CloudTrailService/CreateTrail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cloudTrailServiceClient) UpdateTrail(ctx context.Context, in *CloudTrailConfig, opts ...grpc.CallOption) (*UpdateTrailResponse, error) {
+	out := new(UpdateTrailResponse)
+	err := c.cc.Invoke(ctx, "/cloudtrail.CloudTrailService/UpdateTrail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *cloudTrailServiceClient) DeleteTrail(ctx context.Context, in *DeleteTrailRequest, opts ...grpc.CallOption) (*DeleteTrailResponse, error) {
+	out := new(DeleteTrailResponse)
+	err := c.cc.Invoke(ctx, "/cloudtrail.CloudTrailService/DeleteTrail", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // CloudTrailServiceServer is the server API for CloudTrailService service.
 // All implementations should embed UnimplementedCloudTrailServiceServer
 // for forward compatibility
 type CloudTrailServiceServer interface {
 	GetEvents(*GetEventsRequest, CloudTrailService_GetEventsServer) error
+	CreateTrail(context.Context, *CreateTrailRequest) (*CreateTrailResponse, error)
+	UpdateTrail(context.Context, *CloudTrailConfig) (*UpdateTrailResponse, error)
+	DeleteTrail(context.Context, *DeleteTrailRequest) (*DeleteTrailResponse, error)
 }
 
 // UnimplementedCloudTrailServiceServer should be embedded to have forward compatible implementations.
@@ -74,6 +107,15 @@ type UnimplementedCloudTrailServiceServer struct {
 
 func (UnimplementedCloudTrailServiceServer) GetEvents(*GetEventsRequest, CloudTrailService_GetEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetEvents not implemented")
+}
+func (UnimplementedCloudTrailServiceServer) CreateTrail(context.Context, *CreateTrailRequest) (*CreateTrailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateTrail not implemented")
+}
+func (UnimplementedCloudTrailServiceServer) UpdateTrail(context.Context, *CloudTrailConfig) (*UpdateTrailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTrail not implemented")
+}
+func (UnimplementedCloudTrailServiceServer) DeleteTrail(context.Context, *DeleteTrailRequest) (*DeleteTrailResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTrail not implemented")
 }
 
 // UnsafeCloudTrailServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -108,13 +150,80 @@ func (x *cloudTrailServiceGetEventsServer) Send(m *CloudTrailEvent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _CloudTrailService_CreateTrail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateTrailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudTrailServiceServer).CreateTrail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cloudtrail.CloudTrailService/CreateTrail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudTrailServiceServer).CreateTrail(ctx, req.(*CreateTrailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CloudTrailService_UpdateTrail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CloudTrailConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudTrailServiceServer).UpdateTrail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cloudtrail.CloudTrailService/UpdateTrail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudTrailServiceServer).UpdateTrail(ctx, req.(*CloudTrailConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CloudTrailService_DeleteTrail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTrailRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CloudTrailServiceServer).DeleteTrail(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/cloudtrail.CloudTrailService/DeleteTrail",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CloudTrailServiceServer).DeleteTrail(ctx, req.(*DeleteTrailRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // CloudTrailService_ServiceDesc is the grpc.ServiceDesc for CloudTrailService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var CloudTrailService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "cloudtrail.CloudTrailService",
 	HandlerType: (*CloudTrailServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CreateTrail",
+			Handler:    _CloudTrailService_CreateTrail_Handler,
+		},
+		{
+			MethodName: "UpdateTrail",
+			Handler:    _CloudTrailService_UpdateTrail_Handler,
+		},
+		{
+			MethodName: "DeleteTrail",
+			Handler:    _CloudTrailService_DeleteTrail_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "GetEvents",

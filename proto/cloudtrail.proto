@@ -14,7 +14,38 @@ message CloudTrailEvent {
     google.protobuf.Timestamp timestamp = 2;
 }
 
+message CloudTrailConfig { 
+     bool write  = 1; 
+    bool read  = 2;
+}
+
+message CreateTrailRequest { 
+    string name = 1;
+    CloudTrailConfig config = 2; 
+}
+
+message CreateTrailResponse{ 
+     string arn = 1; 
+}
+
+message UpdateTrailResponse {
+     string arn = 1; 
+}
+
+message DeleteTrailResponse {
+    string arn = 1; 
+    bool ok = 2 ;
+}
+
+message DeleteTrailRequest { 
+    string name = 1;
+}
+
+
 
 service CloudTrailService { 
     rpc GetEvents(GetEventsRequest) returns (stream CloudTrailEvent) {};
+    rpc CreateTrail(CreateTrailRequest) returns (CreateTrailResponse) {};
+    rpc UpdateTrail(CloudTrailConfig) returns  (UpdateTrailResponse) {};
+    rpc DeleteTrail(DeleteTrailRequest) returns (DeleteTrailResponse){};
 }

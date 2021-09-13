@@ -29,11 +29,13 @@ const (
 
 var (
 	PublicMethods = []string{}
+	repo          cloudTrailRepo
 )
 
 type CloudTrailService struct {
 	logger  zerolog.Logger
 	grpc    *grpc.Server
+	region  string
 	webgrpc http.Server
 }
 
@@ -44,6 +46,8 @@ func Run(cmd cli.CloudTrailCmd, logger zerolog.Logger) error {
 		logger.Fatal().Err(err).Msg("Unable to connect to the database.")
 	}
 	runMigrations(db)
+	go listenEvents(cmd)
+	repo = cloudTrailRepo{db}
 
 	service := newCloudTrailService(cmd, db)
 	service.RegisterGRPC()
@@ -70,7 +74,7 @@ func (s *CloudTrailService) Error(err error, code codes.Code, msg string) error 
 }
 
 func runMigrations(db *gorm.DB) {
-	db.AutoMigrate(model.RootUser{}, model.Group{}, model.Role{}, model.Policy{}, model.User{}, model.AccessKey{})
+	db.AutoMigrate(model.Trail{}, model.CloudTrailEvent{})
 }
 
 func newCloudTrailService(cmd cli.CloudTrailCmd, db *gorm.DB) CloudTrailService {
@@ -90,7 +94,7 @@ func newCloudTrailService(cmd cli.CloudTrailCmd, db *gorm.DB) CloudTrailService 
 	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()))
 	webgrpc := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 
-	return CloudTrailService{logger: logger, grpc: s, webgrpc: *webgrpc}
+	return CloudTrailService{logger: logger, grpc: s, webgrpc: *webgrpc, region: cmd.Region}
 }
 
 func (s *CloudTrailService) RegisterGRPC() {
@@ -124,4 +128,15 @@ func (s *CloudTrailService) ServeWeb(port string, serviceName string) error {
 	}
 
 	return nil
+}
+
+func listenEvents(cmd cli.CloudTrailCmd) {
+	brokers := strings.Split(cmd.Brokers, ",")
+	cs := newCloudTrailListener(eventbus.ConsumerConfig{
+		Identifier: cmd.Name(),
+		Verbose:    true,
+		Topic:      eventbus.Audit,
+		Brokers:    brokers,
+	})
+	cs.Start()
 }

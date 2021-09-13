@@ -8,6 +8,7 @@ option go_package = "./;aws";
 message AuditEvent { 
     string account_id = 1;
     string method = 2;
+    string payload = 3;
 }
 
 message InvokeLambdaEvent { 

@@ -21,7 +21,7 @@ const (
 )
 
 var (
-	Services       = []string{"iam", "sqs", "lambda", "ses", "eventbridge"}
+	Services       = []string{"iam", "sqs", "lambda", "ses", "eventbridge", "cloudtrail"}
 	GlobalServices = []string{"s3", "cloudfront", "organization"}
 )
 
@@ -38,6 +38,7 @@ const (
 	SES                 = "ses"
 	CloudFront          = "cloudfront"
 	EventBridge         = "eventbridge"
+	CloudTrail          = "cloudtrail"
 )
 
 const (
