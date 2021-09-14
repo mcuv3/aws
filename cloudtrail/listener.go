@@ -1,8 +1,6 @@
 package cloudtrail
 
 import (
-	"fmt"
-
 	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -45,10 +43,15 @@ func (l *CloudTrailListener) onMessage(msg eventbus.Message) {
 	}
 
 	for _, t := range trails {
-		l.logger.Info().Msgf("Trail: %s", t.Name)
+		e := model.CloudTrailEvent{
+			Method:  event.Method,
+			Region:  event.Region,
+			Sid:     event.Sid,
+			TrailID: t.ID,
+		}
+		go repo.createEvent(&e)
+		l.logger.Info().Msgf("Event created for trail -> %s", t.Name)
 	}
-
-	fmt.Println("Cloud trail", event.String())
 }
 
 func (l *CloudTrailListener) Start() {

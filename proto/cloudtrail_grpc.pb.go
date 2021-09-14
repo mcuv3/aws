@@ -19,8 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CloudTrailServiceClient interface {
 	GetEvents(ctx context.Context, in *GetEventsRequest, opts ...grpc.CallOption) (CloudTrailService_GetEventsClient, error)
-	CreateTrail(ctx context.Context, in *CreateTrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error)
-	UpdateTrail(ctx context.Context, in *CloudTrailConfig, opts ...grpc.CallOption) (*UpdateTrailResponse, error)
+	CreateTrail(ctx context.Context, in *TrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error)
+	UpdateTrail(ctx context.Context, in *TrailRequest, opts ...grpc.CallOption) (*UpdateTrailResponse, error)
 	DeleteTrail(ctx context.Context, in *DeleteTrailRequest, opts ...grpc.CallOption) (*DeleteTrailResponse, error)
 }
 
@@ -64,7 +64,7 @@ func (x *cloudTrailServiceGetEventsClient) Recv() (*CloudTrailEvent, error) {
 	return m, nil
 }
 
-func (c *cloudTrailServiceClient) CreateTrail(ctx context.Context, in *CreateTrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error) {
+func (c *cloudTrailServiceClient) CreateTrail(ctx context.Context, in *TrailRequest, opts ...grpc.CallOption) (*CreateTrailResponse, error) {
 	out := new(CreateTrailResponse)
 	err := c.cc.Invoke(ctx, "/cloudtrail.CloudTrailService/CreateTrail", in, out, opts...)
 	if err != nil {
@@ -73,7 +73,7 @@ func (c *cloudTrailServiceClient) CreateTrail(ctx context.Context, in *CreateTra
 	return out, nil
 }
 
-func (c *cloudTrailServiceClient) UpdateTrail(ctx context.Context, in *CloudTrailConfig, opts ...grpc.CallOption) (*UpdateTrailResponse, error) {
+func (c *cloudTrailServiceClient) UpdateTrail(ctx context.Context, in *TrailRequest, opts ...grpc.CallOption) (*UpdateTrailResponse, error) {
 	out := new(UpdateTrailResponse)
 	err := c.cc.Invoke(ctx, "/cloudtrail.CloudTrailService/UpdateTrail", in, out, opts...)
 	if err != nil {
@@ -96,8 +96,8 @@ func (c *cloudTrailServiceClient) DeleteTrail(ctx context.Context, in *DeleteTra
 // for forward compatibility
 type CloudTrailServiceServer interface {
 	GetEvents(*GetEventsRequest, CloudTrailService_GetEventsServer) error
-	CreateTrail(context.Context, *CreateTrailRequest) (*CreateTrailResponse, error)
-	UpdateTrail(context.Context, *CloudTrailConfig) (*UpdateTrailResponse, error)
+	CreateTrail(context.Context, *TrailRequest) (*CreateTrailResponse, error)
+	UpdateTrail(context.Context, *TrailRequest) (*UpdateTrailResponse, error)
 	DeleteTrail(context.Context, *DeleteTrailRequest) (*DeleteTrailResponse, error)
 }
 
@@ -108,10 +108,10 @@ type UnimplementedCloudTrailServiceServer struct {
 func (UnimplementedCloudTrailServiceServer) GetEvents(*GetEventsRequest, CloudTrailService_GetEventsServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetEvents not implemented")
 }
-func (UnimplementedCloudTrailServiceServer) CreateTrail(context.Context, *CreateTrailRequest) (*CreateTrailResponse, error) {
+func (UnimplementedCloudTrailServiceServer) CreateTrail(context.Context, *TrailRequest) (*CreateTrailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateTrail not implemented")
 }
-func (UnimplementedCloudTrailServiceServer) UpdateTrail(context.Context, *CloudTrailConfig) (*UpdateTrailResponse, error) {
+func (UnimplementedCloudTrailServiceServer) UpdateTrail(context.Context, *TrailRequest) (*UpdateTrailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateTrail not implemented")
 }
 func (UnimplementedCloudTrailServiceServer) DeleteTrail(context.Context, *DeleteTrailRequest) (*DeleteTrailResponse, error) {
@@ -151,7 +151,7 @@ func (x *cloudTrailServiceGetEventsServer) Send(m *CloudTrailEvent) error {
 }
 
 func _CloudTrailService_CreateTrail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateTrailRequest)
+	in := new(TrailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -163,13 +163,13 @@ func _CloudTrailService_CreateTrail_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/cloudtrail.CloudTrailService/CreateTrail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudTrailServiceServer).CreateTrail(ctx, req.(*CreateTrailRequest))
+		return srv.(CloudTrailServiceServer).CreateTrail(ctx, req.(*TrailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _CloudTrailService_UpdateTrail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloudTrailConfig)
+	in := new(TrailRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func _CloudTrailService_UpdateTrail_Handler(srv interface{}, ctx context.Context
 		FullMethod: "/cloudtrail.CloudTrailService/UpdateTrail",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudTrailServiceServer).UpdateTrail(ctx, req.(*CloudTrailConfig))
+		return srv.(CloudTrailServiceServer).UpdateTrail(ctx, req.(*TrailRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

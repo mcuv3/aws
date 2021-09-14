@@ -9,6 +9,8 @@ message AuditEvent {
     string account_id = 1;
     string method = 2;
     string payload = 3;
+    string sid = 4;
+    string region = 5;
 }
 
 message InvokeLambdaEvent { 

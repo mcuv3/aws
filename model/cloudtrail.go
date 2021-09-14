@@ -4,11 +4,10 @@ import "gorm.io/gorm"
 
 type CloudTrailEvent struct {
 	gorm.Model
-	TrailID      string
-	Method       string
-	Source       string
-	ResourceName string
-	Region       string
+	TrailID uint
+	Method  string
+	Sid     string
+	Region  string
 }
 
 type Trail struct {

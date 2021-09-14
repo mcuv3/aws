@@ -86,6 +86,8 @@ func newLambdaService(cmd cli.LambdaCmd, db *gorm.DB) LambdaService {
 		Brokers: brokers,
 		Topic:   eventbus.Audit,
 		Verbose: true,
+		Sid:     cmd.Name(),
+		Region:  cmd.Region,
 	})
 	auth := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: l,
 		ServerPrefix:  ServerPrefix,

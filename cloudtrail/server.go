@@ -84,6 +84,8 @@ func newCloudTrailService(cmd cli.CloudTrailCmd, db *gorm.DB) CloudTrailService 
 		Brokers: brokers,
 		Topic:   eventbus.Audit,
 		Verbose: true,
+		Sid:     cmd.Name(),
+		Region:  cmd.Region,
 	})
 
 	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{Issuer: cmd.Name(), Logger: logger,

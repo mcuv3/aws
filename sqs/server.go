@@ -6,9 +6,11 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"strings"
 
 	"github.com/MauricioAntonioMartinez/aws/cli"
 	database "github.com/MauricioAntonioMartinez/aws/db"
+	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	"github.com/MauricioAntonioMartinez/aws/helpers"
 	"github.com/MauricioAntonioMartinez/aws/interceptors"
 	"github.com/MauricioAntonioMartinez/aws/model"
@@ -85,8 +87,17 @@ func newSqsService(cmd cli.SqsCmd, db *gorm.DB) SQSService {
 		ServerPrefix:  ServerPrefix,
 		SecretKey:     cmd.Secret,
 		PublicMethods: PublicMethods})
+	brokers := strings.Split(cmd.Brokers, ",")
+	auditInterceptor := interceptors.NewAuditInterceptor(interceptors.AuditInterceptorConfig{
+		Brokers: brokers,
+		Topic:   eventbus.Audit,
+		Verbose: true,
+		Sid:     cmd.Name(),
+		Region:  cmd.Region,
+	})
 
-	s := grpc.NewServer(grpc.UnaryInterceptor(authInterceptor.Unary()), grpc.StreamInterceptor(authInterceptor.Stream()))
+	s := grpc.NewServer(grpc.ChainUnaryInterceptor(authInterceptor.Unary(), auditInterceptor.Unary()),
+		grpc.ChainStreamInterceptor(authInterceptor.Stream(), auditInterceptor.Stream()))
 
 	grpcweb := helpers.NewGrpcWeb(s, cmd.PortWeb, cmd.Origin)
 

@@ -108,6 +108,8 @@ func getInterceptors(cmd cli.EventBridgeCmd) ([]grpc.UnaryServerInterceptor, []g
 		Brokers: brokers,
 		Topic:   eventbus.Audit,
 		Verbose: true,
+		Sid:     cmd.Name(),
+		Region:  cmd.Region,
 	})
 	authInterceptor := interceptors.NewAuthInterceptor(interceptors.AuthInterceptorConfig{
 		Issuer:        cmd.Name(),

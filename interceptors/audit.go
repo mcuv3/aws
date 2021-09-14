@@ -8,22 +8,26 @@ import (
 
 	"github.com/MauricioAntonioMartinez/aws/eventbus"
 	aws "github.com/MauricioAntonioMartinez/aws/proto"
-	"github.com/golang/protobuf/proto"
 	"github.com/segmentio/kafka-go/protocol"
 	_ "github.com/segmentio/kafka-go/snappy"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/protobuf/proto"
 )
 
 type AuditInterceptor struct {
 	verbose bool
 	writer  *eventbus.Writer
+	Sid     string
+	Region  string
 }
 
 type AuditInterceptorConfig struct {
 	Brokers []string
 	Topic   eventbus.Topic
 	Verbose bool
+	Sid     string
+	Region  string
 }
 
 func NewAuditInterceptor(config AuditInterceptorConfig) *AuditInterceptor {
@@ -35,6 +39,8 @@ func NewAuditInterceptor(config AuditInterceptorConfig) *AuditInterceptor {
 	return &AuditInterceptor{
 		writer:  w,
 		verbose: config.Verbose,
+		Sid:     config.Sid,
+		Region:  config.Region,
 	}
 }
 
@@ -87,6 +93,8 @@ func (a *AuditInterceptor) audit(key string, ctx context.Context, method string,
 		AccountId: accountId,
 		Method:    method,
 		Payload:   string(payload),
+		Sid:       a.Sid,
+		Region:    a.Region,
 	}
 	if value, err := proto.Marshal(&event); err != nil {
 		fmt.Printf("Error %v", err)
